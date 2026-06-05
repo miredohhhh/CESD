@@ -10,15 +10,20 @@ import com.hjc.backend.dto.UpdateSystemConfigRequest;
 import com.hjc.backend.entity.SystemConfig;
 import com.hjc.backend.exception.BusinessException;
 import com.hjc.backend.mapper.SystemConfigMapper;
+import com.hjc.backend.service.OperationLogService;
 import com.hjc.backend.service.SystemConfigService;
 import com.hjc.backend.vo.SystemConfigVO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigMapper, SystemConfig> implements SystemConfigService {
+
+    private final OperationLogService operationLogService;
 
     @Override
     public PageResult<SystemConfigVO> pageQuery(Long pageNum, Long pageSize, String keyword, Integer status) {
@@ -49,6 +54,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigMapper, Sys
         entity.setDescription(request.getDescription());
         entity.setStatus(defaultStatus(request.getStatus()));
         save(entity);
+        operationLogService.recordSuccess("SYSTEM_CONFIG", "CREATE", "Create system config " + entity.getConfigKey(), "configId=" + entity.getId());
         return getDetail(entity.getId());
     }
 
@@ -63,6 +69,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigMapper, Sys
         entity.setDescription(request.getDescription());
         entity.setStatus(request.getStatus());
         updateById(entity);
+        operationLogService.recordSuccess("SYSTEM_CONFIG", "UPDATE", "Update system config " + entity.getConfigKey(), "configId=" + id);
         return getDetail(id);
     }
 
@@ -70,6 +77,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigMapper, Sys
     public void deleteById(Long id) {
         getExisting(id);
         removeById(id);
+        operationLogService.recordSuccess("SYSTEM_CONFIG", "DELETE", "Delete system config", "configId=" + id);
     }
 
     private SystemConfig getExisting(Long id) {

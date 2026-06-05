@@ -15,6 +15,7 @@ import com.hjc.backend.mapper.SysPermissionMapper;
 import com.hjc.backend.mapper.SysRolePermissionMapper;
 import com.hjc.backend.security.CurrentUserUtils;
 import com.hjc.backend.security.PermissionCode;
+import com.hjc.backend.service.OperationLogService;
 import com.hjc.backend.service.SysPermissionService;
 import com.hjc.backend.vo.CurrentUserPermissionVO;
 import com.hjc.backend.vo.MenuPermissionVO;
@@ -39,6 +40,8 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
     private static final Integer ENABLED = 1;
 
     private final SysRolePermissionMapper sysRolePermissionMapper;
+
+    private final OperationLogService operationLogService;
 
     @Override
     public PageResult<SysPermissionVO> pageQuery(SysPermissionPageRequest request) {
@@ -84,6 +87,7 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
                 request.getParentId(), request.getRoutePath(), request.getComponentPath(), request.getApiPath(),
                 request.getHttpMethod(), request.getIcon(), request.getSortOrder(), request.getStatus(), request.getRemark());
         save(entity);
+        operationLogService.recordSuccess("PERMISSION", "CREATE", "Create permission " + entity.getPermissionCode(), "permissionId=" + entity.getId());
         return getDetail(entity.getId());
     }
 
@@ -101,6 +105,7 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
                 request.getParentId(), request.getRoutePath(), request.getComponentPath(), request.getApiPath(),
                 request.getHttpMethod(), request.getIcon(), request.getSortOrder(), request.getStatus(), request.getRemark());
         updateById(entity);
+        operationLogService.recordSuccess("PERMISSION", "UPDATE", "Update permission " + entity.getPermissionCode(), "permissionId=" + id);
         return getDetail(id);
     }
 
@@ -117,6 +122,7 @@ public class SysPermissionServiceImpl extends ServiceImpl<SysPermissionMapper, S
             throw new BusinessException("Permission is assigned to roles and cannot be deleted");
         }
         removeById(id);
+        operationLogService.recordSuccess("PERMISSION", "DELETE", "Delete permission", "permissionId=" + id);
     }
 
     @Override

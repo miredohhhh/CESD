@@ -5,7 +5,9 @@ import com.hjc.backend.common.PageResult;
 import com.hjc.backend.dto.CreateMaterialAttachmentRequest;
 import com.hjc.backend.dto.UpdateMaterialAttachmentRequest;
 import com.hjc.backend.entity.MaterialAttachment;
+import com.hjc.backend.vo.MaterialAttachmentDownloadResource;
 import com.hjc.backend.vo.MaterialAttachmentVO;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface MaterialAttachmentService extends IService<MaterialAttachment> {
 
@@ -14,6 +16,10 @@ public interface MaterialAttachmentService extends IService<MaterialAttachment> 
     MaterialAttachmentVO getDetail(Long id);
 
     MaterialAttachmentVO create(CreateMaterialAttachmentRequest request);
+
+    MaterialAttachmentVO upload(Long materialId, MultipartFile file);
+
+    MaterialAttachmentDownloadResource getDownloadResource(Long id);
 
     MaterialAttachmentVO update(Long id, UpdateMaterialAttachmentRequest request);
 

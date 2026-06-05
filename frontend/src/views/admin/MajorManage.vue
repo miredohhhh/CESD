@@ -1,89 +1,161 @@
 <template>
-  <el-card>
-    <template #header>
-      <div class="page-header">
-        <span>专业管理</span>
-        <el-button v-if="canCreate" type="primary" @click="openCreateDialog">新增专业</el-button>
+  <section class="admin-page" data-testid="major-manage-page">
+    <AdminPageHeader
+      eyebrow="组织基础数据"
+      title="专业管理"
+      description="维护专业基础信息，为班级、学生和成绩统计提供基础数据。"
+    >
+      <template #actions>
+        <el-button
+          v-if="canCreate"
+          type="primary"
+          data-testid="major-create-button"
+          @click="openCreateDialog"
+        >
+          新增专业
+        </el-button>
+      </template>
+    </AdminPageHeader>
+
+    <el-card class="admin-filter-card" shadow="never">
+      <el-form :model="filters" label-position="top">
+        <div class="admin-filter-grid">
+          <el-form-item label="关键字" class="admin-filter-grid__wide">
+            <el-input
+              v-model="filters.keyword"
+              clearable
+              placeholder="专业名称 / 专业编码 / 所属学院"
+              @keyup.enter="handleSearch"
+            />
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-select v-model="filters.status" clearable placeholder="全部状态">
+              <el-option label="启用" :value="1" />
+              <el-option label="停用" :value="0" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label=" ">
+            <div class="admin-filter-actions">
+              <el-button type="primary" @click="handleSearch">查询</el-button>
+              <el-button @click="handleReset">重置</el-button>
+            </div>
+          </el-form-item>
+        </div>
+      </el-form>
+    </el-card>
+
+    <el-card class="admin-table-card" shadow="never">
+      <div class="admin-card-header">
+        <div>
+          <div class="admin-card-header__title">专业列表</div>
+          <div class="admin-card-header__meta">共 {{ page.total }} 个专业</div>
+        </div>
       </div>
-    </template>
 
-    <el-form :model="filters" inline>
-      <el-form-item label="关键字">
-        <el-input v-model="filters.keyword" clearable placeholder="专业名称 / 编码 / 学院" />
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="filters.status" clearable placeholder="全部状态" style="width: 120px">
-          <el-option label="启用" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="handleSearch">查询</el-button>
-        <el-button @click="handleReset">重置</el-button>
-      </el-form-item>
-    </el-form>
+      <el-table
+        v-loading="loading"
+        :data="records"
+        border
+        stripe
+        empty-text="暂无专业数据"
+        data-testid="major-table"
+      >
+        <el-table-column prop="majorName" label="专业名称" min-width="170" />
+        <el-table-column label="专业编码" min-width="150" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="admin-code-text">{{ row.majorCode || '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="collegeName" label="所属学院" min-width="180" />
+        <el-table-column prop="description" label="说明" min-width="220" show-overflow-tooltip />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'">
+              {{ row.status === 1 ? '启用' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="创建时间" min-width="170" />
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <div class="admin-table-actions">
+              <el-button
+                v-if="canUpdate"
+                link
+                type="primary"
+                :data-testid="`major-edit-${row.id}`"
+                @click="openEditDialog(row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                v-if="canDelete"
+                link
+                type="danger"
+                :data-testid="`major-delete-${row.id}`"
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
 
-    <el-table v-loading="loading" :data="records" border>
-      <el-table-column prop="majorName" label="专业名称" min-width="160" />
-      <el-table-column prop="majorCode" label="专业编码" min-width="140" />
-      <el-table-column prop="collegeName" label="所属学院" min-width="160" />
-      <el-table-column prop="description" label="说明" min-width="180" />
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'info'">
-            {{ row.status === 1 ? '启用' : '停用' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createTime" label="创建时间" min-width="170" />
-      <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
-        <template #default="{ row }">
-          <el-button v-if="canUpdate" link type="primary" @click="openEditDialog(row)"
-            >编辑</el-button
-          >
-          <el-button v-if="canDelete" link type="danger" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+      <div class="admin-pagination">
+        <el-pagination
+          v-model:current-page="page.pageNum"
+          v-model:page-size="page.pageSize"
+          :total="page.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @current-change="fetchList"
+          @size-change="handleSizeChange"
+        />
+      </div>
+    </el-card>
 
-    <el-pagination
-      v-model:current-page="page.pageNum"
-      v-model:page-size="page.pageSize"
-      class="pager"
-      :total="page.total"
-      :page-sizes="[10, 20, 50, 100]"
-      layout="total, sizes, prev, pager, next, jumper"
-      @current-change="fetchList"
-      @size-change="handleSizeChange"
-    />
-
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑专业' : '新增专业'" width="540px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
+    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑专业' : '新增专业'" width="680px">
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-position="top"
+        class="admin-dialog-grid"
+      >
         <el-form-item label="专业名称" prop="majorName">
           <el-input v-model="form.majorName" maxlength="100" show-word-limit />
         </el-form-item>
         <el-form-item label="专业编码" prop="majorCode">
           <el-input v-model="form.majorCode" maxlength="50" show-word-limit />
         </el-form-item>
-        <el-form-item label="所属学院" prop="collegeName">
+        <el-form-item label="所属学院" prop="collegeName" class="admin-dialog-grid__full">
           <el-input v-model="form.collegeName" maxlength="100" show-word-limit />
         </el-form-item>
-        <el-form-item label="说明" prop="description">
-          <el-input v-model="form.description" type="textarea" maxlength="255" show-word-limit />
-        </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" style="width: 100%">
+          <el-select v-model="form.status">
             <el-option label="启用" :value="1" />
             <el-option label="停用" :value="0" />
           </el-select>
         </el-form-item>
+        <el-form-item label="说明" prop="description" class="admin-dialog-grid__full">
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="3"
+            maxlength="255"
+            show-word-limit
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSubmit">保存</el-button>
+        <div class="admin-dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="saving" @click="handleSubmit">保存</el-button>
+        </div>
       </template>
     </el-dialog>
-  </el-card>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -97,6 +169,7 @@ import {
   type CreateMajorInfoPayload,
   type MajorInfoVO,
 } from '@/api/base'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -153,7 +226,7 @@ async function fetchList() {
 
 function handleSearch() {
   page.pageNum = 1
-  fetchList()
+  void fetchList()
 }
 
 function handleReset() {
@@ -164,7 +237,7 @@ function handleReset() {
 
 function handleSizeChange() {
   page.pageNum = 1
-  fetchList()
+  void fetchList()
 }
 
 function resetForm() {
@@ -206,7 +279,7 @@ async function handleSubmit() {
     }
     ElMessage.success('保存成功')
     dialogVisible.value = false
-    fetchList()
+    void fetchList()
   } finally {
     saving.value = false
   }
@@ -216,21 +289,8 @@ async function handleDelete(row: MajorInfoVO) {
   await ElMessageBox.confirm(`确认删除专业「${row.majorName}」？`, '删除确认', { type: 'warning' })
   await deleteMajorInfo(row.id)
   ElMessage.success('删除成功')
-  fetchList()
+  void fetchList()
 }
 
 onMounted(fetchList)
 </script>
-
-<style scoped>
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.pager {
-  margin-top: 16px;
-  justify-content: flex-end;
-}
-</style>

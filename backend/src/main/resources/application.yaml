@@ -7,8 +7,12 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/comprehensive_evaluation?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:12MB}
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -30,8 +34,19 @@ springdoc:
 
 cesd:
   jwt:
-    secret: ${JWT_SECRET:}
+    secret: ${JWT_SECRET:3sK9zX7pQ2rT5yU8aFgHjKlZxCvBnMqWsEdR1tY4uI6oP}
     expiration-seconds: ${JWT_EXPIRATION_SECONDS:86400}
+  upload:
+    root-dir: ${CESD_UPLOAD_ROOT:./uploads}
+    max-file-size: ${CESD_UPLOAD_MAX_FILE_SIZE:10485760}
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - pdf
+      - doc
+      - docx
+    access-url-prefix: /api/material-attachments
 
 management:
   endpoints:

@@ -32,6 +32,7 @@ import com.hjc.backend.vo.ScoreSummaryVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -157,7 +158,7 @@ public class ScoreSummaryServiceImpl extends ServiceImpl<ScoreSummaryMapper, Sco
 
     @Override
     public PageResult<ScoreSummaryVO> pageScoreSummaries(ScoreSummaryPageRequest request) {
-        List<Long> filteredStudentIds = listFilteredStudentIds(request.getClassId(), request.getMajorId());
+        List<Long> filteredStudentIds = listFilteredStudentIds(request.getClassId(), request.getMajorId(), request.getStudentNo(), request.getStudentName());
         if (filteredStudentIds != null && filteredStudentIds.isEmpty()) {
             return PageResult.of(List.of(), 0L, normalizePageNum(request.getPageNum()), normalizePageSize(request.getPageSize()));
         }
@@ -174,6 +175,24 @@ public class ScoreSummaryServiceImpl extends ServiceImpl<ScoreSummaryMapper, Sco
         Page<ScoreSummary> result = page(page, wrapper);
         List<ScoreSummaryVO> records = result.getRecords().stream().map(this::toScoreSummaryVO).toList();
         return PageResult.of(records, result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    @Override
+    public List<ScoreSummaryVO> listScoreSummariesForExport(ScoreSummaryPageRequest request) {
+        List<Long> filteredStudentIds = listFilteredStudentIds(request.getClassId(), request.getMajorId(), request.getStudentNo(), request.getStudentName());
+        if (filteredStudentIds != null && filteredStudentIds.isEmpty()) {
+            return List.of();
+        }
+
+        LambdaQueryWrapper<ScoreSummary> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(request.getStudentId() != null, ScoreSummary::getStudentId, request.getStudentId())
+                .in(filteredStudentIds != null, ScoreSummary::getStudentId, filteredStudentIds)
+                .eq(request.getStatus() != null, ScoreSummary::getStatus, request.getStatus())
+                .orderByDesc(ScoreSummary::getTotalScore)
+                .orderByAsc(ScoreSummary::getClassRank)
+                .orderByAsc(ScoreSummary::getMajorRank)
+                .orderByAsc(ScoreSummary::getStudentId);
+        return list(wrapper).stream().map(this::toScoreSummaryVO).toList();
     }
 
     @Override
@@ -455,8 +474,8 @@ public class ScoreSummaryServiceImpl extends ServiceImpl<ScoreSummaryMapper, Sco
                 .list();
     }
 
-    private List<Long> listFilteredStudentIds(Long classId, Long majorId) {
-        if (classId == null && majorId == null) {
+    private List<Long> listFilteredStudentIds(Long classId, Long majorId, String studentNo, String studentName) {
+        if (classId == null && majorId == null && !StringUtils.hasText(studentNo) && !StringUtils.hasText(studentName)) {
             return null;
         }
         if (classId != null) {
@@ -467,7 +486,9 @@ public class ScoreSummaryServiceImpl extends ServiceImpl<ScoreSummaryMapper, Sco
         }
         LambdaQueryWrapper<Student> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(classId != null, Student::getClassId, classId)
-                .eq(majorId != null, Student::getMajorId, majorId);
+                .eq(majorId != null, Student::getMajorId, majorId)
+                .like(StringUtils.hasText(studentNo), Student::getStudentNo, studentNo)
+                .like(StringUtils.hasText(studentName), Student::getName, studentName);
         return studentService.list(wrapper).stream().map(Student::getId).toList();
     }
 

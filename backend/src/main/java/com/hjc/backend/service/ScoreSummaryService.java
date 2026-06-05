@@ -27,6 +27,8 @@ public interface ScoreSummaryService extends IService<ScoreSummary> {
 
     PageResult<ScoreSummaryVO> pageScoreSummaries(ScoreSummaryPageRequest request);
 
+    List<ScoreSummaryVO> listScoreSummariesForExport(ScoreSummaryPageRequest request);
+
     List<ScoreSummaryVO> listClassRanking(Long classId);
 
     List<ScoreSummaryVO> listMajorRanking(Long majorId);

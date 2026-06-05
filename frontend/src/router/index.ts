@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import BasicLayout from '@/layouts/BasicLayout.vue'
 import { getCurrentUser } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
 import { canAccessRouteLocation, getDefaultPath } from '@/utils/access'
@@ -16,7 +15,7 @@ const router = createRouter({
     },
     {
       path: '/',
-      component: BasicLayout,
+      component: () => import('@/layouts/BasicLayout.vue'),
       redirect: '/student/applications',
       meta: { requiresAuth: true },
       children: [
@@ -151,6 +150,54 @@ const router = createRouter({
           },
         },
         {
+          path: 'admin/users',
+          name: 'admin-users',
+          component: () => import('@/views/admin/UserManage.vue'),
+          meta: {
+            title: 'User Management',
+            roles: ['ADMIN'],
+            permissionCode: 'admin:user:view',
+            showInMenu: true,
+            menuOrder: 36,
+          },
+        },
+        {
+          path: 'admin/system-configs',
+          name: 'admin-system-configs',
+          component: () => import('@/views/admin/SystemConfigManage.vue'),
+          meta: {
+            title: 'System Config',
+            roles: ['ADMIN'],
+            permissionCode: 'admin:system-config:view',
+            showInMenu: true,
+            menuOrder: 37,
+          },
+        },
+        {
+          path: 'admin/operation-logs',
+          name: 'admin-operation-logs',
+          component: () => import('@/views/admin/OperationLogManage.vue'),
+          meta: {
+            title: '操作日志',
+            roles: ['ADMIN'],
+            permissionCode: 'admin:operation-log:view',
+            showInMenu: true,
+            menuOrder: 38,
+          },
+        },
+        {
+          path: 'admin/login-logs',
+          name: 'admin-login-logs',
+          component: () => import('@/views/admin/LoginLogManage.vue'),
+          meta: {
+            title: '登录日志',
+            roles: ['ADMIN'],
+            permissionCode: 'admin:login-log:view',
+            showInMenu: true,
+            menuOrder: 39,
+          },
+        },
+        {
           path: 'admin/permissions',
           name: 'admin-permissions',
           component: () => import('@/views/admin/PermissionManage.vue'),
@@ -159,7 +206,7 @@ const router = createRouter({
             roles: ['ADMIN'],
             permissionCode: 'admin:permission:view',
             showInMenu: true,
-            menuOrder: 36,
+            menuOrder: 40,
           },
         },
         {
@@ -171,7 +218,7 @@ const router = createRouter({
             roles: ['ADMIN'],
             permissionCode: 'admin:role-permission:assign',
             showInMenu: true,
-            menuOrder: 37,
+            menuOrder: 41,
           },
         },
       ],

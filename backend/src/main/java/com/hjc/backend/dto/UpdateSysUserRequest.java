@@ -14,7 +14,7 @@ public class UpdateSysUserRequest {
     @Size(max = 50, message = "username length must be less than or equal to 50")
     private String username;
 
-    // TODO Generate this value with BCrypt in backend when login/register is introduced.
+    // The field name is kept for compatibility; SysUserService stores it as a BCrypt hash.
     @Size(max = 255, message = "passwordHash length must be less than or equal to 255")
     private String passwordHash;
 

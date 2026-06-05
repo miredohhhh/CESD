@@ -40,6 +40,34 @@ export interface SysRolePageParams {
   status?: number
 }
 
+export interface SystemConfigPageParams {
+  pageNum?: number
+  pageSize?: number
+  keyword?: string
+  status?: number
+}
+
+export interface OperationLogPageParams {
+  pageNum?: number
+  pageSize?: number
+  username?: string
+  operationModule?: string
+  operationType?: string
+  result?: string
+  startTime?: string
+  endTime?: string
+}
+
+export interface LoginLogPageParams {
+  pageNum?: number
+  pageSize?: number
+  username?: string
+  loginType?: string
+  result?: string
+  startTime?: string
+  endTime?: string
+}
+
 export interface StudentVO {
   id: number
   userId: number
@@ -103,6 +131,51 @@ export interface SysRoleVO {
   updateTime?: string
 }
 
+export interface SystemConfigVO {
+  id: number
+  configKey: string
+  configValue: string
+  description?: string
+  status?: number
+  createTime?: string
+  updateTime?: string
+}
+
+export interface OperationLogVO {
+  id: number
+  userId?: number
+  username?: string
+  realName?: string
+  roleCode?: string
+  operationType: string
+  operationModule: string
+  operationDesc?: string
+  requestMethod?: string
+  requestUri?: string
+  requestParams?: string
+  ipAddress?: string
+  userAgent?: string
+  result: string
+  errorMessage?: string
+  operationTime?: string
+  createTime?: string
+}
+
+export interface LoginLogVO {
+  id: number
+  userId?: number
+  username?: string
+  realName?: string
+  roleCode?: string
+  loginType: string
+  result: string
+  ipAddress?: string
+  userAgent?: string
+  errorMessage?: string
+  loginTime?: string
+  createTime?: string
+}
+
 export interface CreateMajorInfoPayload {
   majorName: string
   majorCode?: string
@@ -160,6 +233,46 @@ export interface UpdateStudentPayload {
   classId?: number
   phone?: string
   email?: string
+  status?: number
+}
+
+export interface CreateSysUserPayload {
+  username: string
+  passwordHash: string
+  realName: string
+  roleId: number
+  phone?: string
+  email?: string
+  avatar?: string
+  status: number
+}
+
+export interface UpdateSysUserPayload {
+  username?: string
+  passwordHash?: string
+  realName?: string
+  roleId?: number
+  phone?: string
+  email?: string
+  avatar?: string
+  status?: number
+}
+
+export interface ResetUserPasswordPayload {
+  newPassword: string
+}
+
+export interface CreateSystemConfigPayload {
+  configKey: string
+  configValue: string
+  description?: string
+  status?: number
+}
+
+export interface UpdateSystemConfigPayload {
+  configKey: string
+  configValue: string
+  description?: string
   status?: number
 }
 
@@ -231,6 +344,58 @@ export function getUserDetail(id: number) {
   return request.get<SysUserVO>(`/users/${id}`)
 }
 
+export function createUser(data: CreateSysUserPayload) {
+  return request.post<SysUserVO, CreateSysUserPayload>('/users', data)
+}
+
+export function updateUser(id: number, data: UpdateSysUserPayload) {
+  return request.put<SysUserVO, UpdateSysUserPayload>(`/users/${id}`, data)
+}
+
+export function deleteUser(id: number) {
+  return request.delete<void>(`/users/${id}`)
+}
+
+export function resetUserPassword(id: number, data: ResetUserPasswordPayload) {
+  return request.put<SysUserVO, ResetUserPasswordPayload>(`/users/${id}/password/reset`, data)
+}
+
 export function getRolesPage(params: SysRolePageParams) {
   return request.get<PageResult<SysRoleVO>>('/roles/page', { params })
+}
+
+export function getSystemConfigsPage(params: SystemConfigPageParams) {
+  return request.get<PageResult<SystemConfigVO>>('/system-configs/page', { params })
+}
+
+export function getSystemConfigDetail(id: number) {
+  return request.get<SystemConfigVO>(`/system-configs/${id}`)
+}
+
+export function createSystemConfig(data: CreateSystemConfigPayload) {
+  return request.post<SystemConfigVO, CreateSystemConfigPayload>('/system-configs', data)
+}
+
+export function updateSystemConfig(id: number, data: UpdateSystemConfigPayload) {
+  return request.put<SystemConfigVO, UpdateSystemConfigPayload>(`/system-configs/${id}`, data)
+}
+
+export function deleteSystemConfig(id: number) {
+  return request.delete<void>(`/system-configs/${id}`)
+}
+
+export function getOperationLogsPage(params: OperationLogPageParams) {
+  return request.get<PageResult<OperationLogVO>>('/operation-logs/page', { params })
+}
+
+export function getOperationLogDetail(id: number) {
+  return request.get<OperationLogVO>(`/operation-logs/${id}`)
+}
+
+export function getLoginLogsPage(params: LoginLogPageParams) {
+  return request.get<PageResult<LoginLogVO>>('/login-logs/page', { params })
+}
+
+export function getLoginLogDetail(id: number) {
+  return request.get<LoginLogVO>(`/login-logs/${id}`)
 }

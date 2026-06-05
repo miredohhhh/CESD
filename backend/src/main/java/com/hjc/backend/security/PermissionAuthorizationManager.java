@@ -50,6 +50,8 @@ public class PermissionAuthorizationManager implements AuthorizationManager<Requ
             codes.add(PermissionCode.AUDIT_PENDING_VIEW);
         } else if (path.equals("/api/material-applications") && "POST".equals(method)) {
             codes.add(PermissionCode.STUDENT_APPLICATION_CREATE);
+        } else if (path.equals("/api/material-applications/export") && "GET".equals(method)) {
+            codes.add(PermissionCode.ADMIN_MATERIAL_EXPORT);
         } else if (path.matches("/api/material-applications/\\d+/submit")) {
             codes.add(PermissionCode.STUDENT_APPLICATION_SUBMIT);
         } else if (path.matches("/api/material-applications/\\d+/withdraw")) {
@@ -58,6 +60,24 @@ public class PermissionAuthorizationManager implements AuthorizationManager<Requ
             codes.add(PermissionCode.AUDIT_APPLICATION_APPROVE);
         } else if (path.matches("/api/material-applications/\\d+/reject")) {
             codes.add(PermissionCode.AUDIT_APPLICATION_REJECT);
+        } else if (path.equals("/api/material-attachments/upload") && "POST".equals(method)) {
+            codes.add(PermissionCode.STUDENT_APPLICATION_CREATE);
+        } else if (path.matches("/api/material-attachments/\\d+/download") && "GET".equals(method)) {
+            codes.add(PermissionCode.STUDENT_APPLICATION_VIEW);
+            codes.add(PermissionCode.AUDIT_PENDING_VIEW);
+        } else if (path.matches("/api/material-attachments/\\d+") && "DELETE".equals(method)) {
+            codes.add(PermissionCode.STUDENT_APPLICATION_CREATE);
+        } else if (path.startsWith("/api/material-attachments")) {
+            if ("GET".equals(method)) {
+                codes.add(PermissionCode.STUDENT_APPLICATION_VIEW);
+                codes.add(PermissionCode.AUDIT_PENDING_VIEW);
+            } else {
+                codes.add(PermissionCode.STUDENT_APPLICATION_CREATE);
+            }
+        } else if (path.equals("/api/scores/export")
+                || path.matches("/api/scores/classes/\\d+/ranking/export")
+                || path.matches("/api/scores/majors/\\d+/ranking/export")) {
+            codes.add(PermissionCode.ADMIN_SCORE_EXPORT);
         } else if (path.startsWith("/api/scores")) {
             codes.add(PermissionCode.ADMIN_SCORE_RECALCULATE);
         } else if (path.startsWith("/api/evaluation-categories")) {
@@ -83,6 +103,8 @@ public class PermissionAuthorizationManager implements AuthorizationManager<Requ
         } else if (path.startsWith("/api/students")) {
             addCrudCode(codes, method, PermissionCode.ADMIN_STUDENT_VIEW, PermissionCode.ADMIN_STUDENT_CREATE,
                     PermissionCode.ADMIN_STUDENT_UPDATE, PermissionCode.ADMIN_STUDENT_DELETE);
+        } else if (path.matches("/api/users/\\d+/password/reset") && "PUT".equals(method)) {
+            codes.add(PermissionCode.ADMIN_USER_RESET_PASSWORD);
         } else if (path.startsWith("/api/users")) {
             addCrudCode(codes, method, PermissionCode.ADMIN_USER_VIEW, PermissionCode.ADMIN_USER_CREATE,
                     PermissionCode.ADMIN_USER_UPDATE, PermissionCode.ADMIN_USER_DELETE);
@@ -95,11 +117,13 @@ public class PermissionAuthorizationManager implements AuthorizationManager<Requ
             addCrudCode(codes, method, PermissionCode.ADMIN_PERMISSION_VIEW, PermissionCode.ADMIN_PERMISSION_CREATE,
                     PermissionCode.ADMIN_PERMISSION_UPDATE, PermissionCode.ADMIN_PERMISSION_DELETE);
         } else if (path.startsWith("/api/system-configs")) {
-            if ("GET".equals(method)) {
-                codes.add(PermissionCode.ADMIN_SYSTEM_CONFIG_VIEW);
-            } else {
-                codes.add(PermissionCode.ADMIN_SYSTEM_CONFIG_UPDATE);
-            }
+            addCrudCode(codes, method, PermissionCode.ADMIN_SYSTEM_CONFIG_VIEW,
+                    PermissionCode.ADMIN_SYSTEM_CONFIG_CREATE, PermissionCode.ADMIN_SYSTEM_CONFIG_UPDATE,
+                    PermissionCode.ADMIN_SYSTEM_CONFIG_DELETE);
+        } else if (path.startsWith("/api/operation-logs")) {
+            codes.add(PermissionCode.ADMIN_OPERATION_LOG_VIEW);
+        } else if (path.startsWith("/api/login-logs")) {
+            codes.add(PermissionCode.ADMIN_LOGIN_LOG_VIEW);
         }
 
         return codes;

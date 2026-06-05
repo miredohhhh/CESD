@@ -14,6 +14,12 @@ public class ScoreSummaryPageRequest extends PageRequest {
 
     private Long studentId;
 
+    @Schema(description = "Student number")
+    private String studentNo;
+
+    @Schema(description = "Student name")
+    private String studentName;
+
     private Long classId;
 
     private Long majorId;

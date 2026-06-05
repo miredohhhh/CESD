@@ -1,141 +1,206 @@
 <template>
-  <el-card>
-    <template #header>
-      <div class="page-header">
-        <span>成绩重算</span>
-      </div>
-    </template>
+  <section class="admin-page" data-testid="score-recalculate-page">
+    <AdminPageHeader
+      eyebrow="成绩管理"
+      title="成绩重算"
+      description="按学生、班级、专业或全量范围重新计算综合测评成绩和排名。"
+    >
+      <template #actions>
+        <el-button
+          v-if="canExportScore"
+          :loading="exporting"
+          data-testid="score-export-summary-button"
+          @click="handleExportScoreSummaries"
+        >
+          导出成绩汇总
+        </el-button>
+        <el-button
+          v-if="canExportScore"
+          :loading="exporting"
+          data-testid="score-export-class-ranking-button"
+          @click="handleExportClassRanking"
+        >
+          导出班级排名
+        </el-button>
+        <el-button
+          v-if="canExportScore"
+          :loading="exporting"
+          data-testid="score-export-major-ranking-button"
+          @click="handleExportMajorRanking"
+        >
+          导出专业排名
+        </el-button>
+      </template>
+    </AdminPageHeader>
 
     <el-alert
-      class="mb-16"
       title="当前为管理端成绩重算入口，操作会更新成绩统计和排名。"
+      description="建议在基础数据、材料审核结果确认后执行；单个学生、班级、专业重算适合日常修正，全量重算适合阶段性统一刷新。"
       type="warning"
       show-icon
       :closable="false"
     />
 
-    <el-tabs v-model="activeTab">
-      <el-tab-pane label="单个学生重算" name="student">
-        <el-form label-width="110px" class="form">
-          <el-form-item label="选择学生">
-            <el-select
-              v-model="selectedStudentId"
-              filterable
-              placeholder="请选择学生"
-              style="width: 360px"
-            >
-              <el-option
-                v-for="student in students"
-                :key="student.id"
-                :label="`${student.studentNo} - ${student.name}`"
-                :value="student.id"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
+    <el-card class="admin-table-card" shadow="never">
+      <div class="admin-card-header">
+        <div>
+          <div class="admin-card-header__title">重算范围</div>
+          <div class="admin-card-header__meta">选择一个范围后执行重算，系统会保留最近操作结果</div>
+        </div>
+      </div>
+
+      <el-tabs v-model="activeTab" class="score-tabs">
+        <el-tab-pane label="单个学生重算" name="student">
+          <div class="score-action-panel">
+            <div>
+              <h3>单个学生</h3>
+              <p>用于单独刷新某一名学生的总分、班级排名和专业排名。</p>
+            </div>
+            <div class="score-action-control">
+              <el-select
+                v-model="selectedStudentId"
+                filterable
+                placeholder="请选择学生"
+                class="score-action-select"
+              >
+                <el-option
+                  v-for="student in students"
+                  :key="student.id"
+                  :label="`${student.studentNo} - ${student.name}`"
+                  :value="student.id"
+                />
+              </el-select>
+              <el-button
+                type="primary"
+                data-testid="score-recalculate-student-button"
+                :loading="running"
+                :disabled="!canRecalculate"
+                @click="handleStudentRecalculate"
+              >
+                重算该学生成绩
+              </el-button>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="班级重算" name="class">
+          <div class="score-action-panel">
+            <div>
+              <h3>班级范围</h3>
+              <p>用于刷新某个班级内全部学生的成绩和班级排名。</p>
+            </div>
+            <div class="score-action-control">
+              <el-select
+                v-model="selectedClassId"
+                filterable
+                placeholder="请选择班级"
+                class="score-action-select"
+              >
+                <el-option
+                  v-for="classItem in classes"
+                  :key="classItem.id"
+                  :label="`${classItem.className} / ${classItem.grade}`"
+                  :value="classItem.id"
+                />
+              </el-select>
+              <el-button
+                type="primary"
+                data-testid="score-recalculate-class-button"
+                :loading="running"
+                :disabled="!canRecalculate"
+                @click="handleClassRecalculate"
+              >
+                重算该班级成绩
+              </el-button>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="专业重算" name="major">
+          <div class="score-action-panel">
+            <div>
+              <h3>专业范围</h3>
+              <p>用于刷新某个专业内全部学生的成绩和专业排名。</p>
+            </div>
+            <div class="score-action-control">
+              <el-select
+                v-model="selectedMajorId"
+                filterable
+                placeholder="请选择专业"
+                class="score-action-select"
+              >
+                <el-option
+                  v-for="major in majors"
+                  :key="major.id"
+                  :label="`${major.majorName} / ${major.majorCode || '-'}`"
+                  :value="major.id"
+                />
+              </el-select>
+              <el-button
+                type="primary"
+                data-testid="score-recalculate-major-button"
+                :loading="running"
+                :disabled="!canRecalculate"
+                @click="handleMajorRecalculate"
+              >
+                重算该专业成绩
+              </el-button>
+            </div>
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="全量重算" name="all">
+          <div class="score-action-panel score-action-panel--danger">
+            <div>
+              <h3>全量范围</h3>
+              <p>全量重算会重新计算所有学生成绩和排名，数据量较大时可能需要更长时间。</p>
+            </div>
             <el-button
-              type="primary"
+              type="danger"
+              data-testid="score-recalculate-all-button"
               :loading="running"
               :disabled="!canRecalculate"
-              @click="handleStudentRecalculate"
+              @click="handleAllRecalculate"
             >
-              重算该学生成绩
+              重算全部成绩
             </el-button>
-          </el-form-item>
-        </el-form>
-      </el-tab-pane>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
 
-      <el-tab-pane label="班级重算" name="class">
-        <el-form label-width="110px" class="form">
-          <el-form-item label="选择班级">
-            <el-select
-              v-model="selectedClassId"
-              filterable
-              placeholder="请选择班级"
-              style="width: 360px"
-            >
-              <el-option
-                v-for="classItem in classes"
-                :key="classItem.id"
-                :label="`${classItem.className} / ${classItem.grade}`"
-                :value="classItem.id"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary"
-              :loading="running"
-              :disabled="!canRecalculate"
-              @click="handleClassRecalculate"
-            >
-              重算该班级成绩
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </el-tab-pane>
+    <el-card class="admin-table-card" shadow="never">
+      <div class="admin-card-header">
+        <div>
+          <div class="admin-card-header__title">最近操作结果</div>
+          <div class="admin-card-header__meta">仅展示当前页面最近执行的重算操作</div>
+        </div>
+      </div>
 
-      <el-tab-pane label="专业重算" name="major">
-        <el-form label-width="110px" class="form">
-          <el-form-item label="选择专业">
-            <el-select
-              v-model="selectedMajorId"
-              filterable
-              placeholder="请选择专业"
-              style="width: 360px"
-            >
-              <el-option
-                v-for="major in majors"
-                :key="major.id"
-                :label="`${major.majorName} / ${major.majorCode || '-'}`"
-                :value="major.id"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary"
-              :loading="running"
-              :disabled="!canRecalculate"
-              @click="handleMajorRecalculate"
-            >
-              重算该专业成绩
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </el-tab-pane>
-
-      <el-tab-pane label="全量重算" name="all">
-        <el-alert
-          class="mb-16"
-          title="全量重算会重新计算所有学生成绩和排名，可能耗时较长。"
-          type="error"
-          show-icon
-          :closable="false"
-        />
-        <el-button
-          type="danger"
-          :loading="running"
-          :disabled="!canRecalculate"
-          @click="handleAllRecalculate"
-        >
-          重算全部成绩
-        </el-button>
-      </el-tab-pane>
-    </el-tabs>
-
-    <el-table v-if="operationLogs.length" class="result-table" :data="operationLogs" border>
-      <el-table-column prop="type" label="操作类型" width="150" />
-      <el-table-column prop="target" label="操作对象" min-width="220" />
-      <el-table-column prop="time" label="操作时间" width="180" />
-      <el-table-column prop="status" label="状态" width="100" />
-    </el-table>
-  </el-card>
+      <el-table
+        :data="operationLogs"
+        border
+        stripe
+        empty-text="暂无重算操作记录"
+        data-testid="score-recalculate-result-table"
+      >
+        <el-table-column prop="type" label="操作类型" width="150" />
+        <el-table-column prop="target" label="操作对象" min-width="240" />
+        <el-table-column prop="time" label="操作时间" width="180" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag type="success">{{ row.status }}</el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+  </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { AxiosResponse } from 'axios'
 import {
   getClassesPage,
   getMajorsPage,
@@ -145,12 +210,17 @@ import {
   type StudentVO,
 } from '@/api/base'
 import {
+  exportClassRanking,
+  exportMajorRanking,
+  exportScoreSummaries,
   recalculateAllScores,
   recalculateClassScores,
   recalculateMajorScores,
   recalculateStudentScore,
 } from '@/api/score'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import { useUserStore } from '@/stores/user'
+import { downloadResponseFile } from '@/utils/download'
 
 interface OperationLog {
   type: string
@@ -162,6 +232,7 @@ interface OperationLog {
 const userStore = useUserStore()
 const activeTab = ref('student')
 const running = ref(false)
+const exporting = ref(false)
 const students = ref<StudentVO[]>([])
 const classes = ref<ClassInfoVO[]>([])
 const majors = ref<MajorInfoVO[]>([])
@@ -171,6 +242,7 @@ const selectedMajorId = ref<number>()
 const operationLogs = ref<OperationLog[]>([])
 
 const canRecalculate = computed(() => userStore.hasPermission('admin:score:recalculate'))
+const canExportScore = computed(() => userStore.hasPermission('admin:score:export'))
 
 async function fetchOptions() {
   const [studentResult, classResult, majorResult] = await Promise.all([
@@ -215,7 +287,7 @@ function handleStudentRecalculate() {
     ElMessage.warning('请选择学生')
     return
   }
-  runWithConfirm(
+  void runWithConfirm(
     `确认重算学生「${student.name}」的成绩？`,
     () => recalculateStudentScore(selectedStudentId.value!),
     '学生重算',
@@ -229,7 +301,7 @@ function handleClassRecalculate() {
     ElMessage.warning('请选择班级')
     return
   }
-  runWithConfirm(
+  void runWithConfirm(
     `确认重算班级「${classItem.className}」的成绩？`,
     () => recalculateClassScores(selectedClassId.value!),
     '班级重算',
@@ -243,7 +315,7 @@ function handleMajorRecalculate() {
     ElMessage.warning('请选择专业')
     return
   }
-  runWithConfirm(
+  void runWithConfirm(
     `确认重算专业「${major.majorName}」的成绩？`,
     () => recalculateMajorScores(selectedMajorId.value!),
     '专业重算',
@@ -252,28 +324,101 @@ function handleMajorRecalculate() {
 }
 
 function handleAllRecalculate() {
-  runWithConfirm('确认重算全部学生成绩？', recalculateAllScores, '全量重算', '全部学生')
+  void runWithConfirm('确认重算全部学生成绩？', recalculateAllScores, '全量重算', '全部学生')
+}
+
+async function runExport(action: () => Promise<AxiosResponse<Blob>>, filename: string) {
+  exporting.value = true
+  try {
+    const response = await action()
+    downloadResponseFile(response, filename)
+    ElMessage.success('导出成功')
+  } finally {
+    exporting.value = false
+  }
+}
+
+function handleExportScoreSummaries() {
+  void runExport(() => exportScoreSummaries(), 'score-summary.xlsx')
+}
+
+function handleExportClassRanking() {
+  if (!selectedClassId.value) {
+    ElMessage.warning('请先选择班级')
+    return
+  }
+  void runExport(() => exportClassRanking(selectedClassId.value!), 'class-ranking.xlsx')
+}
+
+function handleExportMajorRanking() {
+  if (!selectedMajorId.value) {
+    ElMessage.warning('请先选择专业')
+    return
+  }
+  void runExport(() => exportMajorRanking(selectedMajorId.value!), 'major-ranking.xlsx')
 }
 
 onMounted(fetchOptions)
 </script>
 
 <style scoped>
-.page-header {
+.score-tabs {
+  --el-tabs-header-height: 44px;
+}
+
+.score-action-panel {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
+  min-height: 132px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 
-.mb-16 {
-  margin-bottom: 16px;
+.score-action-panel--danger {
+  border-color: #fecaca;
+  background: #fff7f7;
 }
 
-.form {
-  padding-top: 12px;
+.score-action-panel h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 650;
 }
 
-.result-table {
-  margin-top: 20px;
+.score-action-panel p {
+  max-width: 520px;
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.score-action-control {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-action-select {
+  width: 320px;
+}
+
+@media (max-width: 900px) {
+  .score-action-panel,
+  .score-action-control {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .score-action-control,
+  .score-action-select {
+    width: 100%;
+  }
 }
 </style>

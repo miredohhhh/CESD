@@ -41,6 +41,12 @@ export interface CurrentUserPermissionVO {
   buttons: string[]
 }
 
+export interface ChangePasswordPayload {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
 export function login(data: LoginRequest) {
   return request.post<LoginVO, LoginRequest>('/auth/login', data)
 }
@@ -51,4 +57,12 @@ export function getCurrentUser() {
 
 export function getCurrentUserPermissions() {
   return request.get<CurrentUserPermissionVO>('/auth/permissions')
+}
+
+export function changePassword(data: ChangePasswordPayload) {
+  return request.put<void, ChangePasswordPayload>('/auth/password', data)
+}
+
+export function logout() {
+  return request.post<void>('/auth/logout')
 }

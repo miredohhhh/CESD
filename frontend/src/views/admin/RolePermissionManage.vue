@@ -1,54 +1,89 @@
-﻿<template>
-  <section class="manage-page">
-    <div class="page-heading">
-      <div>
-        <h1>Role Permissions</h1>
-        <p>Assign menu, button and API permissions to roles.</p>
-      </div>
-      <el-button type="primary" :disabled="!selectedRoleId" :loading="saving" @click="handleSave"
-        >Save</el-button
-      >
+<template>
+  <section class="admin-page" data-testid="role-permission-page">
+    <AdminPageHeader
+      eyebrow="角色授权"
+      title="角色授权"
+      description="为不同角色配置菜单、按钮和接口权限，控制系统访问范围。"
+    >
+      <template #actions>
+        <el-button
+          type="primary"
+          data-testid="role-permission-save-button"
+          :disabled="!selectedRoleId"
+          :loading="saving"
+          @click="handleSave"
+        >
+          保存授权
+        </el-button>
+      </template>
+    </AdminPageHeader>
+
+    <div class="admin-split-layout">
+      <el-card class="admin-filter-card" shadow="never">
+        <div class="admin-card-header">
+          <div>
+            <div class="admin-card-header__title">选择角色</div>
+            <div class="admin-card-header__meta">先选择角色，再维护其权限范围</div>
+          </div>
+        </div>
+        <el-form label-position="top">
+          <el-form-item label="角色">
+            <el-select
+              v-model="selectedRoleId"
+              filterable
+              placeholder="请选择角色"
+              @change="handleRoleChange"
+            >
+              <el-option
+                v-for="role in roles"
+                :key="role.id"
+                :label="`${role.roleName} (${role.roleCode})`"
+                :value="role.id"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <p class="admin-text-muted">
+          权限树包含菜单、按钮和接口权限。保存时会提交已勾选和半选节点，后端仍会执行最终权限校验。
+        </p>
+      </el-card>
+
+      <el-card class="admin-tree-card" shadow="never">
+        <div class="admin-card-header">
+          <div>
+            <div class="admin-card-header__title">权限树</div>
+            <div class="admin-card-header__meta">勾选该角色可访问的菜单、按钮和接口权限</div>
+          </div>
+        </div>
+        <p class="admin-tree-card__intro">
+          修改授权后请点击右上角“保存授权”。未选择角色时可浏览权限结构，但不会提交保存。
+        </p>
+        <el-tree
+          ref="treeRef"
+          v-loading="loading"
+          :data="permissionTree"
+          data-testid="role-permission-tree"
+          show-checkbox
+          node-key="id"
+          default-expand-all
+          :props="{ label: 'permissionName', children: 'children' }"
+          empty-text="暂无权限数据"
+        >
+          <template #default="{ data }">
+            <span class="admin-tree-node">
+              <span>{{ data.permissionName }}</span>
+              <el-tag size="small" :type="data.permissionType === 'MENU' ? 'primary' : 'info'">
+                {{ data.permissionType }}
+              </el-tag>
+              <code class="admin-code-text">{{ data.permissionCode }}</code>
+            </span>
+          </template>
+        </el-tree>
+      </el-card>
     </div>
-    <el-card shadow="never">
-      <el-form label-width="80px">
-        <el-form-item label="Role">
-          <el-select
-            v-model="selectedRoleId"
-            filterable
-            placeholder="Select role"
-            @change="handleRoleChange"
-          >
-            <el-option
-              v-for="role in roles"
-              :key="role.id"
-              :label="`${role.roleName} (${role.roleCode})`"
-              :value="role.id"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
-    </el-card>
-    <el-card shadow="never">
-      <el-tree
-        ref="treeRef"
-        v-loading="loading"
-        :data="permissionTree"
-        show-checkbox
-        node-key="id"
-        default-expand-all
-        :props="{ label: 'permissionName', children: 'children' }"
-      >
-        <template #default="{ data }">
-          <span class="tree-node"
-            ><span>{{ data.permissionName }}</span
-            ><el-tag size="small">{{ data.permissionType }}</el-tag
-            ><code>{{ data.permissionCode }}</code></span
-          >
-        </template>
-      </el-tree>
-    </el-card>
   </section>
 </template>
+
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue'
 import { ElMessage, type TreeInstance } from 'element-plus'
@@ -59,6 +94,7 @@ import {
   getRolePermissions,
   type SysPermissionVO,
 } from '@/api/permission'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 const roles = ref<SysRoleVO[]>([])
 const permissionTree = ref<SysPermissionVO[]>([])
 const selectedRoleId = ref<number>()
@@ -93,37 +129,9 @@ async function handleSave() {
     const half = treeRef.value?.getHalfCheckedKeys() ?? []
     const ids = [...checked, ...half].map(Number).filter(Number.isFinite)
     await assignRolePermissions(selectedRoleId.value, ids)
-    ElMessage.success('Saved')
+    ElMessage.success('已保存')
   } finally {
     saving.value = false
   }
 }
 </script>
-<style scoped>
-.manage-page {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.page-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-.page-heading h1 {
-  margin: 0;
-  font-size: 22px;
-}
-.page-heading p {
-  margin: 6px 0 0;
-  color: #64748b;
-}
-.tree-node {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-code {
-  color: #64748b;
-}
-</style>
