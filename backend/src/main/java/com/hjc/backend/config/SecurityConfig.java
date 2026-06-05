@@ -46,14 +46,21 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers("/api/auth/me", "/api/auth/permissions").authenticated()
+                        .requestMatchers(
+                                "/api/auth/me",
+                                "/api/auth/permissions",
+                                "/api/auth/password",
+                                "/api/auth/logout"
+                        ).authenticated()
                         .requestMatchers(
                                 "/api/frontend/**",
                                 "/api/material-applications",
+                                "/api/material-applications/export",
                                 "/api/material-applications/*/submit",
                                 "/api/material-applications/*/withdraw",
                                 "/api/material-applications/*/approve",
                                 "/api/material-applications/*/reject",
+                                "/api/material-attachments/**",
                                 "/api/scores/**",
                                 "/api/evaluation-categories/**",
                                 "/api/evaluation-items/**",
@@ -63,7 +70,9 @@ public class SecurityConfig {
                                 "/api/users/**",
                                 "/api/roles/**",
                                 "/api/permissions/**",
-                                "/api/system-configs/**"
+                                "/api/system-configs/**",
+                                "/api/operation-logs/**",
+                                "/api/login-logs/**"
                         ).access(permissionAuthorizationManager)
                         .anyRequest().permitAll()
                 )

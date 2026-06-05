@@ -6,14 +6,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hjc.backend.common.PageResult;
 import com.hjc.backend.common.ResultCode;
 import com.hjc.backend.dto.CreateSysUserRequest;
+import com.hjc.backend.dto.ResetSysUserPasswordRequest;
 import com.hjc.backend.dto.UpdateSysUserRequest;
 import com.hjc.backend.entity.SysUser;
 import com.hjc.backend.exception.BusinessException;
 import com.hjc.backend.mapper.SysUserMapper;
+import com.hjc.backend.service.OperationLogService;
 import com.hjc.backend.service.SysRoleService;
 import com.hjc.backend.service.SysUserService;
 import com.hjc.backend.vo.SysUserVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -24,6 +27,10 @@ import java.util.List;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private final SysRoleService sysRoleService;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final OperationLogService operationLogService;
 
     @Override
     public PageResult<SysUserVO> pageQuery(Long pageNum, Long pageSize, String keyword, Integer status, Long roleId) {
@@ -56,7 +63,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         checkRoleExists(request.getRoleId());
         SysUser entity = new SysUser();
         entity.setUsername(request.getUsername());
-        entity.setPasswordHash(request.getPasswordHash());
+        entity.setPasswordHash(encodePassword(request.getPasswordHash()));
         entity.setRealName(request.getRealName());
         entity.setRoleId(request.getRoleId());
         if (request.getPhone() != null) {
@@ -70,6 +77,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
         entity.setStatus(request.getStatus());
         save(entity);
+        operationLogService.recordSuccess("USER", "CREATE", "Create user " + entity.getUsername(), "userId=" + entity.getId());
         return getDetail(entity.getId());
     }
 
@@ -81,7 +89,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             entity.setUsername(request.getUsername());
         }
         if (StringUtils.hasText(request.getPasswordHash())) {
-            entity.setPasswordHash(request.getPasswordHash());
+            entity.setPasswordHash(encodePassword(request.getPasswordHash()));
         }
         if (StringUtils.hasText(request.getRealName())) {
             entity.setRealName(request.getRealName());
@@ -97,6 +105,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             entity.setStatus(request.getStatus());
         }
         updateById(entity);
+        operationLogService.recordSuccess("USER", "UPDATE", "Update user " + entity.getUsername(), "userId=" + id);
+        return getDetail(id);
+    }
+
+    @Override
+    public SysUserVO resetPassword(Long id, ResetSysUserPasswordRequest request) {
+        SysUser entity = getExisting(id);
+        entity.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        updateById(entity);
+        operationLogService.recordSuccess("USER", "RESET_PASSWORD", "Reset user password " + entity.getUsername(), "userId=" + id);
         return getDetail(id);
     }
 
@@ -105,6 +123,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         getExisting(id);
         // TODO Check related student and review records before deleting a user.
         removeById(id);
+        operationLogService.recordSuccess("USER", "DELETE", "Delete user", "userId=" + id);
     }
 
     private SysUser getExisting(Long id) {
@@ -145,6 +164,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         vo.setCreateTime(entity.getCreateTime());
         vo.setUpdateTime(entity.getUpdateTime());
         return vo;
+    }
+
+    private String encodePassword(String password) {
+        if (!StringUtils.hasText(password)) {
+            throw new BusinessException("password must not be blank");
+        }
+        if (isBcryptHash(password)) {
+            return password;
+        }
+        return passwordEncoder.encode(password);
+    }
+
+    private boolean isBcryptHash(String value) {
+        return value.startsWith("$2a$") || value.startsWith("$2b$") || value.startsWith("$2y$");
     }
 
     private long normalizePageNum(Long pageNum) {

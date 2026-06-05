@@ -3,6 +3,7 @@ package com.hjc.backend.controller;
 import com.hjc.backend.common.ApiResponse;
 import com.hjc.backend.common.PageResult;
 import com.hjc.backend.dto.CreateSysUserRequest;
+import com.hjc.backend.dto.ResetSysUserPasswordRequest;
 import com.hjc.backend.dto.UpdateSysUserRequest;
 import com.hjc.backend.service.SysUserService;
 import com.hjc.backend.vo.SysUserVO;
@@ -55,6 +56,14 @@ public class SysUserController {
     @PutMapping("/{id}")
     public ApiResponse<SysUserVO> update(@PathVariable Long id, @Valid @RequestBody UpdateSysUserRequest request) {
         return ApiResponse.success(sysUserService.update(id, request));
+    }
+
+    @Operation(summary = "Reset user password")
+    @PutMapping("/{id}/password/reset")
+    public ApiResponse<SysUserVO> resetPassword(
+            @PathVariable Long id,
+            @Valid @RequestBody ResetSysUserPasswordRequest request) {
+        return ApiResponse.success(sysUserService.resetPassword(id, request));
     }
 
     @Operation(summary = "删除用户")

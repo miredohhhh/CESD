@@ -8,6 +8,7 @@ import com.hjc.backend.common.ResultCode;
 import com.hjc.backend.dto.ApproveMaterialApplicationRequest;
 import com.hjc.backend.dto.CreateReviewRecordRequest;
 import com.hjc.backend.dto.CreateMaterialApplicationRequest;
+import com.hjc.backend.dto.MaterialApplicationExportRequest;
 import com.hjc.backend.dto.MyMaterialApplicationPageRequest;
 import com.hjc.backend.dto.PendingMaterialApplicationPageRequest;
 import com.hjc.backend.dto.RejectMaterialApplicationRequest;
@@ -30,11 +31,14 @@ import com.hjc.backend.service.EvaluationItemService;
 import com.hjc.backend.service.MajorInfoService;
 import com.hjc.backend.service.MaterialApplicationService;
 import com.hjc.backend.service.MaterialAttachmentService;
+import com.hjc.backend.service.OperationLogService;
 import com.hjc.backend.service.ReviewerScopeService;
 import com.hjc.backend.service.ReviewRecordService;
+import com.hjc.backend.service.ScoreSummaryService;
 import com.hjc.backend.service.StudentService;
 import com.hjc.backend.service.SysUserService;
 import com.hjc.backend.vo.MaterialApplicationDetailVO;
+import com.hjc.backend.vo.MaterialApplicationExportVO;
 import com.hjc.backend.vo.MaterialApplicationVO;
 import com.hjc.backend.vo.MaterialAttachmentVO;
 import com.hjc.backend.vo.MyApplicationStatisticsVO;
@@ -94,6 +98,10 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
     private final ObjectProvider<MaterialAttachmentService> materialAttachmentServiceProvider;
 
     private final ObjectProvider<ReviewRecordService> reviewRecordServiceProvider;
+
+    private final ObjectProvider<ScoreSummaryService> scoreSummaryServiceProvider;
+
+    private final OperationLogService operationLogService;
 
     @Override
     public PageResult<MaterialApplicationVO> pageQuery(Long pageNum, Long pageSize, String keyword, String status, Long studentId, Long itemId) {
@@ -246,7 +254,8 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
         updateById(entity);
 
         createReviewRecord(id, reviewerId, beforeStatus, STATUS_APPROVED, STATUS_APPROVED, request.getReviewScore(), request.getReviewComment(), now);
-        // TODO After authentication and score modules mature, trigger ScoreSummaryService.recalculateStudentScore(studentId) here or asynchronously.
+        scoreSummaryServiceProvider.getObject().recalculateStudentScore(entity.getStudentId());
+        operationLogService.recordSuccess("MATERIAL_REVIEW", "APPROVE", "Approve material application", "materialId=" + id + ",studentId=" + entity.getStudentId());
         return getDetail(id);
     }
 
@@ -281,6 +290,7 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
 
         String reviewComment = StringUtils.hasText(request.getReviewComment()) ? request.getReviewComment() : request.getRejectReason();
         createReviewRecord(id, reviewerId, beforeStatus, STATUS_REJECTED, STATUS_REJECTED, null, reviewComment, now);
+        operationLogService.recordSuccess("MATERIAL_REVIEW", "REJECT", "Reject material application", "materialId=" + id + ",studentId=" + entity.getStudentId());
         return getDetail(id);
     }
 
@@ -393,6 +403,52 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
         return PageResult.of(records, result.getTotal(), result.getCurrent(), result.getSize());
     }
 
+    @Override
+    public List<MaterialApplicationExportVO> listMaterialApplicationsForExport(MaterialApplicationExportRequest request) {
+        if (!CurrentUserUtils.isAdmin()) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "Current account has no export permission");
+        }
+        if (StringUtils.hasText(request.getStatus())) {
+            checkStatus(request.getStatus());
+        }
+        if (request.getClassId() != null && classInfoService.getById(request.getClassId()) == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "Class does not exist or has been deleted");
+        }
+        if (request.getMajorId() != null && majorInfoService.getById(request.getMajorId()) == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "Major does not exist or has been deleted");
+        }
+
+        List<Long> studentIds = listFilteredStudentIds(request);
+        if (studentIds != null && studentIds.isEmpty()) {
+            return List.of();
+        }
+        List<Long> categoryItemIds = listItemIdsByCategory(request.getCategoryId());
+        if (categoryItemIds != null && categoryItemIds.isEmpty()) {
+            return List.of();
+        }
+
+        LambdaQueryWrapper<MaterialApplication> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StringUtils.hasText(request.getStatus()), MaterialApplication::getStatus, request.getStatus())
+                .eq(request.getStudentId() != null, MaterialApplication::getStudentId, request.getStudentId())
+                .in(studentIds != null, MaterialApplication::getStudentId, studentIds)
+                .eq(request.getItemId() != null, MaterialApplication::getItemId, request.getItemId())
+                .in(categoryItemIds != null, MaterialApplication::getItemId, categoryItemIds)
+                .and(StringUtils.hasText(request.getKeyword()), w -> w
+                        .like(MaterialApplication::getTitle, request.getKeyword())
+                        .or()
+                        .like(MaterialApplication::getDescription, request.getKeyword()))
+                .ge(request.getStartTime() != null, MaterialApplication::getSubmitTime, request.getStartTime())
+                .le(request.getEndTime() != null, MaterialApplication::getSubmitTime, request.getEndTime())
+                .orderByDesc(MaterialApplication::getSubmitTime)
+                .orderByDesc(MaterialApplication::getCreateTime)
+                .orderByDesc(MaterialApplication::getId);
+        List<MaterialApplication> applications = list(wrapper);
+        ApplicationContext context = loadApplicationContext(applications);
+        return applications.stream()
+                .map(entity -> toMaterialApplicationExportVO(entity, context))
+                .toList();
+    }
+
     private MaterialApplication getExisting(Long id) {
         MaterialApplication entity = getById(id);
         if (entity == null) {
@@ -491,6 +547,24 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
     }
 
     private List<Long> listFilteredStudentIds(PendingMaterialApplicationPageRequest request) {
+        boolean hasStudentFilter = request.getStudentId() != null
+                || StringUtils.hasText(request.getStudentNo())
+                || StringUtils.hasText(request.getStudentName())
+                || request.getClassId() != null
+                || request.getMajorId() != null;
+        if (!hasStudentFilter) {
+            return null;
+        }
+        LambdaQueryWrapper<Student> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(request.getStudentId() != null, Student::getId, request.getStudentId())
+                .like(StringUtils.hasText(request.getStudentNo()), Student::getStudentNo, request.getStudentNo())
+                .like(StringUtils.hasText(request.getStudentName()), Student::getName, request.getStudentName())
+                .eq(request.getClassId() != null, Student::getClassId, request.getClassId())
+                .eq(request.getMajorId() != null, Student::getMajorId, request.getMajorId());
+        return studentService.list(wrapper).stream().map(Student::getId).toList();
+    }
+
+    private List<Long> listFilteredStudentIds(MaterialApplicationExportRequest request) {
         boolean hasStudentFilter = request.getStudentId() != null
                 || StringUtils.hasText(request.getStudentNo())
                 || StringUtils.hasText(request.getStudentName())
@@ -640,6 +714,24 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
         return vo;
     }
 
+    private MaterialApplicationExportVO toMaterialApplicationExportVO(MaterialApplication entity, ApplicationContext context) {
+        MaterialApplicationExportVO vo = new MaterialApplicationExportVO();
+        vo.setId(entity.getId());
+        vo.setTitle(entity.getTitle());
+        vo.setStudentId(entity.getStudentId());
+        fillStudentFields(vo, entity.getStudentId(), context);
+        vo.setItemId(entity.getItemId());
+        fillItemFields(vo, entity.getItemId(), context);
+        vo.setApplyScore(entity.getApplyScore());
+        vo.setFinalScore(entity.getFinalScore());
+        vo.setStatus(entity.getStatus());
+        vo.setAttachmentCount(context.attachmentCounts.getOrDefault(entity.getId(), 0));
+        vo.setSubmitTime(entity.getSubmitTime());
+        vo.setReviewTime(entity.getReviewTime());
+        vo.setRejectReason(entity.getRejectReason());
+        return vo;
+    }
+
     private MaterialApplicationDetailVO toMaterialApplicationDetailVO(MaterialApplication entity, ApplicationContext context,
                                                                      List<MaterialAttachmentVO> attachments,
                                                                      List<ReviewRecordVO> reviewRecords) {
@@ -691,6 +783,19 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
         }
     }
 
+    private void fillItemFields(MaterialApplicationExportVO vo, Long itemId, ApplicationContext context) {
+        EvaluationItem item = context.items.get(itemId);
+        if (item == null) {
+            return;
+        }
+        vo.setItemName(item.getItemName());
+        vo.setCategoryId(item.getCategoryId());
+        EvaluationCategory category = context.categories.get(item.getCategoryId());
+        if (category != null) {
+            vo.setCategoryName(category.getCategoryName());
+        }
+    }
+
     private void fillItemFields(MaterialApplicationDetailVO vo, Long itemId, ApplicationContext context) {
         EvaluationItem item = context.items.get(itemId);
         if (item == null) {
@@ -705,6 +810,25 @@ public class MaterialApplicationServiceImpl extends ServiceImpl<MaterialApplicat
     }
 
     private void fillStudentFields(PendingMaterialApplicationVO vo, Long studentId, ApplicationContext context) {
+        Student student = context.students.get(studentId);
+        if (student == null) {
+            return;
+        }
+        vo.setStudentNo(student.getStudentNo());
+        vo.setStudentName(student.getName());
+        vo.setClassId(student.getClassId());
+        vo.setMajorId(student.getMajorId());
+        ClassInfo classInfo = context.classes.get(student.getClassId());
+        if (classInfo != null) {
+            vo.setClassName(classInfo.getClassName());
+        }
+        MajorInfo majorInfo = context.majors.get(student.getMajorId());
+        if (majorInfo != null) {
+            vo.setMajorName(majorInfo.getMajorName());
+        }
+    }
+
+    private void fillStudentFields(MaterialApplicationExportVO vo, Long studentId, ApplicationContext context) {
         Student student = context.students.get(studentId);
         if (student == null) {
             return;

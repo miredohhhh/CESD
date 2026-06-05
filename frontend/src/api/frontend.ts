@@ -168,6 +168,14 @@ export function getPendingApplicationsPage(params: PendingMaterialApplicationPag
   })
 }
 
+export function exportMaterialApplications(
+  params: Omit<PendingMaterialApplicationPageParams, 'pageNo' | 'pageSize'>,
+) {
+  return request.downloadResponse('/material-applications/export', {
+    params,
+  })
+}
+
 export function getMyScore() {
   return request.get<FrontendScoreSummaryVO>('/frontend/my-score')
 }

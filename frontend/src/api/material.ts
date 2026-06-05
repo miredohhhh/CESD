@@ -1,5 +1,5 @@
 import request from '@/api/request'
-import type { MyMaterialApplicationVO } from '@/api/frontend'
+import type { MaterialAttachmentVO, MyMaterialApplicationVO } from '@/api/frontend'
 
 export type MaterialApplicationStatus =
   | 'DRAFT'
@@ -83,4 +83,23 @@ export function withdrawMaterialApplication(
     `/material-applications/${id}/withdraw`,
     data,
   )
+}
+
+export function uploadMaterialAttachment(materialId: number, file: File) {
+  const formData = new FormData()
+  formData.append('materialId', String(materialId))
+  formData.append('file', file)
+  return request.post<MaterialAttachmentVO, FormData>('/material-attachments/upload', formData)
+}
+
+export function downloadMaterialAttachment(id: number) {
+  return request.download(`/material-attachments/${id}/download`)
+}
+
+export function getMaterialAttachmentDownloadUrl(id: number) {
+  return `/api/material-attachments/${id}/download`
+}
+
+export function deleteMaterialAttachment(id: number) {
+  return request.delete<void>(`/material-attachments/${id}`)
 }

@@ -8,6 +8,7 @@ import com.hjc.backend.entity.SysRole;
 import com.hjc.backend.entity.SysRolePermission;
 import com.hjc.backend.exception.BusinessException;
 import com.hjc.backend.mapper.SysRolePermissionMapper;
+import com.hjc.backend.service.OperationLogService;
 import com.hjc.backend.service.SysPermissionService;
 import com.hjc.backend.service.SysRolePermissionService;
 import com.hjc.backend.service.SysRoleService;
@@ -28,6 +29,8 @@ public class SysRolePermissionServiceImpl extends ServiceImpl<SysRolePermissionM
     private final SysRoleService sysRoleService;
 
     private final SysPermissionService sysPermissionService;
+
+    private final OperationLogService operationLogService;
 
     @Override
     public RolePermissionVO getRolePermissions(Long roleId) {
@@ -67,6 +70,7 @@ public class SysRolePermissionServiceImpl extends ServiceImpl<SysRolePermissionM
             }).toList();
             saveBatch(relations);
         }
+        operationLogService.recordSuccess("ROLE_PERMISSION", "ASSIGN", "Assign role permissions", "roleId=" + roleId + ",permissionCount=" + permissionIds.size());
         return getRolePermissions(roleId);
     }
 

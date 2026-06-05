@@ -11,6 +11,8 @@ public final class PermissionCode {
     public static final String AUDIT_APPLICATION_APPROVE = "audit:application:approve";
     public static final String AUDIT_APPLICATION_REJECT = "audit:application:reject";
     public static final String ADMIN_SCORE_RECALCULATE = "admin:score:recalculate";
+    public static final String ADMIN_SCORE_EXPORT = "admin:score:export";
+    public static final String ADMIN_MATERIAL_EXPORT = "admin:material:export";
     public static final String ADMIN_EVALUATION_CATEGORY_VIEW = "admin:evaluation-category:view";
     public static final String ADMIN_EVALUATION_CATEGORY_CREATE = "admin:evaluation-category:create";
     public static final String ADMIN_EVALUATION_CATEGORY_UPDATE = "admin:evaluation-category:update";
@@ -35,6 +37,7 @@ public final class PermissionCode {
     public static final String ADMIN_USER_CREATE = "admin:user:create";
     public static final String ADMIN_USER_UPDATE = "admin:user:update";
     public static final String ADMIN_USER_DELETE = "admin:user:delete";
+    public static final String ADMIN_USER_RESET_PASSWORD = "admin:user:reset-password";
     public static final String ADMIN_ROLE_VIEW = "admin:role:view";
     public static final String ADMIN_ROLE_CREATE = "admin:role:create";
     public static final String ADMIN_ROLE_UPDATE = "admin:role:update";
@@ -45,7 +48,11 @@ public final class PermissionCode {
     public static final String ADMIN_PERMISSION_DELETE = "admin:permission:delete";
     public static final String ADMIN_ROLE_PERMISSION_ASSIGN = "admin:role-permission:assign";
     public static final String ADMIN_SYSTEM_CONFIG_VIEW = "admin:system-config:view";
+    public static final String ADMIN_SYSTEM_CONFIG_CREATE = "admin:system-config:create";
     public static final String ADMIN_SYSTEM_CONFIG_UPDATE = "admin:system-config:update";
+    public static final String ADMIN_SYSTEM_CONFIG_DELETE = "admin:system-config:delete";
+    public static final String ADMIN_OPERATION_LOG_VIEW = "admin:operation-log:view";
+    public static final String ADMIN_LOGIN_LOG_VIEW = "admin:login-log:view";
 
     private PermissionCode() {
     }

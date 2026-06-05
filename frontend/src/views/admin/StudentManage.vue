@@ -1,177 +1,238 @@
 <template>
-  <el-card>
-    <template #header>
-      <div class="page-header">
-        <span>学生管理</span>
-        <el-button v-if="canCreate" type="primary" @click="openCreateDialog"> 新增学生 </el-button>
+  <section class="admin-page" data-testid="student-manage-page">
+    <AdminPageHeader
+      eyebrow="学生档案"
+      title="学生管理"
+      description="维护学生基础信息、账号绑定关系、专业班级归属和联系方式。"
+    >
+      <template #actions>
+        <el-button
+          v-if="canCreate"
+          type="primary"
+          data-testid="student-create-button"
+          @click="openCreateDialog"
+        >
+          新增学生
+        </el-button>
+      </template>
+    </AdminPageHeader>
+
+    <el-card class="admin-filter-card" shadow="never">
+      <el-form :model="filters" label-position="top">
+        <div class="admin-filter-grid">
+          <el-form-item label="关键字">
+            <el-input
+              v-model="filters.keyword"
+              clearable
+              placeholder="学号 / 姓名 / 手机 / 邮箱"
+              @keyup.enter="handleSearch"
+            />
+          </el-form-item>
+          <el-form-item label="专业">
+            <el-select v-model="filters.majorId" clearable filterable placeholder="全部专业">
+              <el-option
+                v-for="major in majors"
+                :key="major.id"
+                :label="major.majorName"
+                :value="major.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="班级">
+            <el-select v-model="filters.classId" clearable filterable placeholder="全部班级">
+              <el-option
+                v-for="classItem in filteredClasses"
+                :key="classItem.id"
+                :label="classItem.className"
+                :value="classItem.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="年级">
+            <el-input v-model="filters.grade" clearable placeholder="如 2023级" />
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-select v-model="filters.status" clearable placeholder="全部状态">
+              <el-option label="正常" :value="1" />
+              <el-option label="停用" :value="0" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label=" ">
+            <div class="admin-filter-actions">
+              <el-button type="primary" @click="handleSearch">查询</el-button>
+              <el-button @click="handleReset">重置</el-button>
+            </div>
+          </el-form-item>
+        </div>
+      </el-form>
+    </el-card>
+
+    <el-card class="admin-table-card" shadow="never">
+      <div class="admin-card-header">
+        <div>
+          <div class="admin-card-header__title">学生列表</div>
+          <div class="admin-card-header__meta">共 {{ page.total }} 名学生</div>
+        </div>
       </div>
-    </template>
 
-    <el-form :model="filters" inline>
-      <el-form-item label="关键字">
-        <el-input v-model="filters.keyword" clearable placeholder="学号 / 姓名 / 手机 / 邮箱" />
-      </el-form-item>
-      <el-form-item label="专业">
-        <el-select
-          v-model="filters.majorId"
-          clearable
-          filterable
-          placeholder="全部专业"
-          style="width: 180px"
-        >
-          <el-option
-            v-for="major in majors"
-            :key="major.id"
-            :label="major.majorName"
-            :value="major.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="班级">
-        <el-select
-          v-model="filters.classId"
-          clearable
-          filterable
-          placeholder="全部班级"
-          style="width: 180px"
-        >
-          <el-option
-            v-for="classItem in filteredClasses"
-            :key="classItem.id"
-            :label="classItem.className"
-            :value="classItem.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="年级">
-        <el-input v-model="filters.grade" clearable placeholder="如 2023级" />
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="filters.status" clearable placeholder="全部状态" style="width: 120px">
-          <el-option label="正常" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="handleSearch">查询</el-button>
-        <el-button @click="handleReset">重置</el-button>
-      </el-form-item>
-    </el-form>
+      <el-table
+        v-loading="loading"
+        :data="records"
+        border
+        stripe
+        empty-text="暂无学生数据"
+        data-testid="student-table"
+      >
+        <el-table-column prop="studentNo" label="学号" min-width="130" />
+        <el-table-column prop="name" label="姓名" min-width="110" />
+        <el-table-column label="绑定用户" min-width="170" show-overflow-tooltip>
+          <template #default="{ row }">{{ getUserName(row.userId) }}</template>
+        </el-table-column>
+        <el-table-column label="专业" min-width="160">
+          <template #default="{ row }">{{ getMajorName(row.majorId) }}</template>
+        </el-table-column>
+        <el-table-column label="班级" min-width="160">
+          <template #default="{ row }">{{ getClassName(row.classId) }}</template>
+        </el-table-column>
+        <el-table-column prop="grade" label="年级" width="110" />
+        <el-table-column prop="gender" label="性别" width="80" />
+        <el-table-column prop="phone" label="手机号" min-width="130" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'">
+              {{ row.status === 1 ? '正常' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <div class="admin-table-actions">
+              <el-button
+                v-if="canUpdate"
+                link
+                type="primary"
+                :data-testid="`student-edit-${row.id}`"
+                @click="openEditDialog(row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                v-if="canDelete"
+                link
+                type="danger"
+                :data-testid="`student-delete-${row.id}`"
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
 
-    <el-table v-loading="loading" :data="records" border>
-      <el-table-column prop="studentNo" label="学号" min-width="130" />
-      <el-table-column prop="name" label="姓名" min-width="110" />
-      <el-table-column label="绑定用户" min-width="150">
-        <template #default="{ row }">{{ getUserName(row.userId) }}</template>
-      </el-table-column>
-      <el-table-column label="专业" min-width="150">
-        <template #default="{ row }">{{ getMajorName(row.majorId) }}</template>
-      </el-table-column>
-      <el-table-column label="班级" min-width="150">
-        <template #default="{ row }">{{ getClassName(row.classId) }}</template>
-      </el-table-column>
-      <el-table-column prop="grade" label="年级" width="110" />
-      <el-table-column prop="gender" label="性别" width="80" />
-      <el-table-column prop="phone" label="手机号" min-width="130" />
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'info'">
-            {{ row.status === 1 ? '正常' : '停用' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
-        <template #default="{ row }">
-          <el-button v-if="canUpdate" link type="primary" @click="openEditDialog(row)"
-            >编辑</el-button
-          >
-          <el-button v-if="canDelete" link type="danger" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+      <div class="admin-pagination">
+        <el-pagination
+          v-model:current-page="page.pageNum"
+          v-model:page-size="page.pageSize"
+          :total="page.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @current-change="fetchList"
+          @size-change="handleSizeChange"
+        />
+      </div>
+    </el-card>
 
-    <el-pagination
-      v-model:current-page="page.pageNum"
-      v-model:page-size="page.pageSize"
-      class="pager"
-      :total="page.total"
-      :page-sizes="[10, 20, 50, 100]"
-      layout="total, sizes, prev, pager, next, jumper"
-      @current-change="fetchList"
-      @size-change="handleSizeChange"
-    />
+    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑学生' : '新增学生'" width="820px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
+        <section class="student-form-section">
+          <h3>账号绑定</h3>
+          <div class="admin-dialog-grid">
+            <el-form-item label="绑定用户" prop="userId" class="admin-dialog-grid__full">
+              <el-select v-model="form.userId" filterable placeholder="请选择用户">
+                <el-option
+                  v-for="user in users"
+                  :key="user.id"
+                  :label="`${user.username} - ${user.realName}`"
+                  :value="user.id"
+                />
+              </el-select>
+            </el-form-item>
+          </div>
+        </section>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑学生' : '新增学生'" width="620px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
-        <el-form-item label="绑定用户" prop="userId">
-          <el-select v-model="form.userId" filterable placeholder="请选择用户" style="width: 100%">
-            <el-option
-              v-for="user in users"
-              :key="user.id"
-              :label="`${user.username} - ${user.realName}`"
-              :value="user.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="学号" prop="studentNo">
-          <el-input v-model="form.studentNo" maxlength="30" show-word-limit />
-        </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="form.name" maxlength="50" show-word-limit />
-        </el-form-item>
-        <el-form-item label="性别" prop="gender">
-          <el-select v-model="form.gender" clearable style="width: 100%">
-            <el-option label="男" value="M" />
-            <el-option label="女" value="F" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="年级" prop="grade">
-          <el-input v-model="form.grade" maxlength="20" placeholder="如 2023级" show-word-limit />
-        </el-form-item>
-        <el-form-item label="专业" prop="majorId">
-          <el-select
-            v-model="form.majorId"
-            filterable
-            style="width: 100%"
-            @change="form.classId = 0"
-          >
-            <el-option
-              v-for="major in majors"
-              :key="major.id"
-              :label="major.majorName"
-              :value="major.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="班级" prop="classId">
-          <el-select v-model="form.classId" filterable style="width: 100%">
-            <el-option
-              v-for="classItem in formClasses"
-              :key="classItem.id"
-              :label="classItem.className"
-              :value="classItem.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" maxlength="20" />
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" style="width: 100%">
-            <el-option label="正常" :value="1" />
-            <el-option label="停用" :value="0" />
-          </el-select>
-        </el-form-item>
+        <section class="student-form-section">
+          <h3>学籍归属</h3>
+          <div class="admin-dialog-grid">
+            <el-form-item label="学号" prop="studentNo">
+              <el-input v-model="form.studentNo" maxlength="30" show-word-limit />
+            </el-form-item>
+            <el-form-item label="姓名" prop="name">
+              <el-input v-model="form.name" maxlength="50" show-word-limit />
+            </el-form-item>
+            <el-form-item label="性别" prop="gender">
+              <el-select v-model="form.gender" clearable placeholder="请选择">
+                <el-option label="男" value="M" />
+                <el-option label="女" value="F" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="年级" prop="grade">
+              <el-input
+                v-model="form.grade"
+                maxlength="20"
+                placeholder="如 2023级"
+                show-word-limit
+              />
+            </el-form-item>
+            <el-form-item label="专业" prop="majorId">
+              <el-select v-model="form.majorId" filterable @change="form.classId = 0">
+                <el-option
+                  v-for="major in majors"
+                  :key="major.id"
+                  :label="major.majorName"
+                  :value="major.id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="班级" prop="classId">
+              <el-select v-model="form.classId" filterable>
+                <el-option
+                  v-for="classItem in formClasses"
+                  :key="classItem.id"
+                  :label="classItem.className"
+                  :value="classItem.id"
+                />
+              </el-select>
+            </el-form-item>
+          </div>
+        </section>
+
+        <section class="student-form-section">
+          <h3>联系与状态</h3>
+          <div class="admin-dialog-grid">
+            <el-form-item label="手机号" prop="phone">
+              <el-input v-model="form.phone" maxlength="20" />
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="form.email" maxlength="100" />
+            </el-form-item>
+            <el-form-item label="状态" prop="status">
+              <el-select v-model="form.status">
+                <el-option label="正常" :value="1" />
+                <el-option label="停用" :value="0" />
+              </el-select>
+            </el-form-item>
+          </div>
+        </section>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSubmit">保存</el-button>
+        <div class="admin-dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="saving" @click="handleSubmit">保存</el-button>
+        </div>
       </template>
     </el-dialog>
-  </el-card>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -191,6 +252,7 @@ import {
   type StudentVO,
   type SysUserVO,
 } from '@/api/base'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -299,7 +361,7 @@ async function fetchList() {
 
 function handleSearch() {
   page.pageNum = 1
-  fetchList()
+  void fetchList()
 }
 
 function handleReset() {
@@ -313,7 +375,7 @@ function handleReset() {
 
 function handleSizeChange() {
   page.pageNum = 1
-  fetchList()
+  void fetchList()
 }
 
 function resetForm() {
@@ -370,7 +432,7 @@ async function handleSubmit() {
     }
     ElMessage.success('保存成功')
     dialogVisible.value = false
-    fetchList()
+    void fetchList()
   } finally {
     saving.value = false
   }
@@ -380,7 +442,7 @@ async function handleDelete(row: StudentVO) {
   await ElMessageBox.confirm(`确认删除学生「${row.name}」？`, '删除确认', { type: 'warning' })
   await deleteStudent(row.id)
   ElMessage.success('删除成功')
-  fetchList()
+  void fetchList()
 }
 
 onMounted(async () => {
@@ -390,14 +452,14 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.student-form-section + .student-form-section {
+  margin-top: 6px;
 }
 
-.pager {
-  margin-top: 16px;
-  justify-content: flex-end;
+.student-form-section h3 {
+  margin: 0 0 14px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 650;
 }
 </style>

@@ -5,11 +5,17 @@ import com.hjc.backend.common.PageResult;
 import com.hjc.backend.dto.CreateMaterialAttachmentRequest;
 import com.hjc.backend.dto.UpdateMaterialAttachmentRequest;
 import com.hjc.backend.service.MaterialAttachmentService;
+import com.hjc.backend.vo.MaterialAttachmentDownloadResource;
 import com.hjc.backend.vo.MaterialAttachmentVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +25,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.charset.StandardCharsets;
 
 @Tag(name = "Material Attachment Management", description = "Material attachment metadata CRUD")
 @RestController
@@ -49,6 +58,28 @@ public class MaterialAttachmentController {
     @PostMapping
     public ApiResponse<MaterialAttachmentVO> create(@Valid @RequestBody CreateMaterialAttachmentRequest request) {
         return ApiResponse.success(materialAttachmentService.create(request));
+    }
+
+    @Operation(summary = "Upload material attachment")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<MaterialAttachmentVO> upload(
+            @RequestParam Long materialId,
+            @RequestParam MultipartFile file) {
+        return ApiResponse.success(materialAttachmentService.upload(materialId, file));
+    }
+
+    @Operation(summary = "Download material attachment")
+    @GetMapping("/{id}/download")
+    public ResponseEntity<Resource> download(@PathVariable Long id) {
+        MaterialAttachmentDownloadResource download = materialAttachmentService.getDownloadResource(id);
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename(download.originalName(), StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(download.contentType()))
+                .contentLength(download.contentLength())
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .body(download.resource());
     }
 
     @Operation(summary = "Update material attachment metadata")

@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig } from 'axios'
+import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import type { ApiResponse } from '@/types/common'
 import { useUserStore } from '@/stores/user'
@@ -22,9 +22,12 @@ axiosInstance.interceptors.request.use((config) => {
 
 axiosInstance.interceptors.response.use(
   (response) => {
+    if (response.config.responseType === 'blob' || response.config.responseType === 'arraybuffer') {
+      return response
+    }
     const result = response.data as ApiResponse<unknown>
     if (result.code !== SUCCESS_CODE) {
-      const message = result.message || '请求失败'
+      const message = result.message || 'Request failed'
       if (result.code === UNAUTHORIZED_CODE && !isLoginRequest(response.config.url)) {
         handleUnauthorized(message)
         return Promise.reject(new Error(message))
@@ -35,9 +38,9 @@ axiosInstance.interceptors.response.use(
     return response
   },
   (error) => {
-    const message = error?.response?.data?.message || error?.message || '网络请求异常'
+    const message = error?.response?.data?.message || error?.message || 'Network request failed'
     if (error?.response?.status === UNAUTHORIZED_CODE && !isLoginRequest(error?.config?.url)) {
-      handleUnauthorized('登录已失效，请重新登录')
+      handleUnauthorized('Login expired, please sign in again')
       return Promise.reject(error)
     }
     ElMessage.error(message)
@@ -53,7 +56,7 @@ function handleUnauthorized(message: string) {
   const userStore = useUserStore()
   userStore.clearLogin()
   if (window.location.pathname !== '/login') {
-    ElMessage.warning(message || '登录已失效，请重新登录')
+    ElMessage.warning(message || 'Login expired, please sign in again')
     window.location.href = `/login?redirect=${encodeURIComponent(
       window.location.pathname + window.location.search,
     )}`
@@ -62,6 +65,18 @@ function handleUnauthorized(message: string) {
 
 function unwrap<T>(response: { data: ApiResponse<T> }) {
   return response.data.data
+}
+
+async function ensureBlobSuccess(response: AxiosResponse<Blob>) {
+  const contentType = String(response.headers['content-type'] || '')
+  if (contentType.includes('application/json')) {
+    const result = JSON.parse(await response.data.text()) as ApiResponse<unknown>
+    if (result.code !== SUCCESS_CODE) {
+      const message = result.message || 'Request failed'
+      ElMessage.error(message)
+      return Promise.reject(new Error(message))
+    }
+  }
 }
 
 const request = {
@@ -80,6 +95,22 @@ const request = {
   async delete<T>(url: string, config?: AxiosRequestConfig) {
     const response = await axiosInstance.delete<ApiResponse<T>>(url, config)
     return unwrap(response)
+  },
+  async download(url: string, config?: AxiosRequestConfig) {
+    const response = await axiosInstance.get<Blob>(url, {
+      ...config,
+      responseType: 'blob',
+    })
+    await ensureBlobSuccess(response)
+    return response.data
+  },
+  async downloadResponse(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<Blob>> {
+    const response = await axiosInstance.get<Blob>(url, {
+      ...config,
+      responseType: 'blob',
+    })
+    await ensureBlobSuccess(response)
+    return response
   },
 }
 

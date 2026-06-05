@@ -1,6 +1,7 @@
 package com.hjc.backend.controller;
 
 import com.hjc.backend.common.ApiResponse;
+import com.hjc.backend.dto.ChangePasswordRequest;
 import com.hjc.backend.dto.LoginRequest;
 import com.hjc.backend.service.AuthService;
 import com.hjc.backend.vo.CurrentUserPermissionVO;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,5 +42,19 @@ public class AuthController {
     @GetMapping("/permissions")
     public ApiResponse<CurrentUserPermissionVO> permissions() {
         return ApiResponse.success(authService.getCurrentUserPermissions());
+    }
+
+    @Operation(summary = "Change current user password")
+    @PutMapping("/password")
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request);
+        return ApiResponse.success();
+    }
+
+    @Operation(summary = "Logout current user")
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout() {
+        authService.logout();
+        return ApiResponse.success();
     }
 }

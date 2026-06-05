@@ -37,6 +37,8 @@ frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
 frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
 frontend/*.tsbuildinfo
 frontend/.eslintcache
 frontend/logs/

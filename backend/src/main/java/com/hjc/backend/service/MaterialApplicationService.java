@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.hjc.backend.common.PageResult;
 import com.hjc.backend.dto.ApproveMaterialApplicationRequest;
 import com.hjc.backend.dto.CreateMaterialApplicationRequest;
+import com.hjc.backend.dto.MaterialApplicationExportRequest;
 import com.hjc.backend.dto.MyMaterialApplicationPageRequest;
 import com.hjc.backend.dto.PendingMaterialApplicationPageRequest;
 import com.hjc.backend.dto.RejectMaterialApplicationRequest;
@@ -14,7 +15,10 @@ import com.hjc.backend.vo.MaterialApplicationDetailVO;
 import com.hjc.backend.vo.MaterialApplicationVO;
 import com.hjc.backend.vo.MyApplicationStatisticsVO;
 import com.hjc.backend.vo.MyMaterialApplicationVO;
+import com.hjc.backend.vo.MaterialApplicationExportVO;
 import com.hjc.backend.vo.PendingMaterialApplicationVO;
+
+import java.util.List;
 
 public interface MaterialApplicationService extends IService<MaterialApplication> {
 
@@ -43,4 +47,6 @@ public interface MaterialApplicationService extends IService<MaterialApplication
     MyApplicationStatisticsVO getMyApplicationStatistics();
 
     PageResult<PendingMaterialApplicationVO> pagePendingApplications(PendingMaterialApplicationPageRequest request);
+
+    List<MaterialApplicationExportVO> listMaterialApplicationsForExport(MaterialApplicationExportRequest request);
 }

@@ -9,13 +9,21 @@
         label-position="top"
         @keyup.enter="handleLogin"
       >
-        <el-form-item label="Username" prop="username"
-          ><el-input v-model="form.username"
-        /></el-form-item>
+        <el-form-item label="Username" prop="username">
+          <div class="field-control" data-testid="login-username-input">
+            <el-input v-model="form.username" />
+          </div>
+        </el-form-item>
         <el-form-item label="Password" prop="password"
-          ><el-input v-model="form.password" type="password" show-password
-        /></el-form-item>
-        <el-button type="primary" class="login-button" :loading="loading" @click="handleLogin"
+          ><div class="field-control" data-testid="login-password-input">
+            <el-input v-model="form.password" type="password" show-password /></div
+        ></el-form-item>
+        <el-button
+          type="primary"
+          class="login-button"
+          data-testid="login-submit-button"
+          :loading="loading"
+          @click="handleLogin"
           >Login</el-button
         >
       </el-form>
@@ -75,6 +83,10 @@ function getRedirectPath() {
   max-width: calc(100vw - 32px);
 }
 .login-button {
+  width: 100%;
+}
+
+.field-control {
   width: 100%;
 }
 </style>

@@ -23,6 +23,8 @@ export interface ScoreSummaryPageParams {
   pageNum?: number
   pageSize?: number
   studentId?: number
+  studentNo?: string
+  studentName?: string
   classId?: number
   majorId?: number
   status?: number
@@ -46,4 +48,16 @@ export function recalculateAllScores() {
 
 export function getScoreSummariesPage(params: ScoreSummaryPageParams) {
   return request.get<PageResult<ScoreSummaryVO>>('/scores/page', { params })
+}
+
+export function exportScoreSummaries(params: ScoreSummaryPageParams = {}) {
+  return request.downloadResponse('/scores/export', { params })
+}
+
+export function exportClassRanking(classId: number) {
+  return request.downloadResponse(`/scores/classes/${classId}/ranking/export`)
+}
+
+export function exportMajorRanking(majorId: number) {
+  return request.downloadResponse(`/scores/majors/${majorId}/ranking/export`)
 }
