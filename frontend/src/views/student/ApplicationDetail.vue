@@ -723,8 +723,9 @@ onMounted(loadDetail)
 
 <style scoped>
 .application-status-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--app-border-color);
+  border-radius: var(--app-radius);
+  background: var(--app-card-bg);
 }
 
 .application-status-card__main {
@@ -756,9 +757,9 @@ onMounted(loadDetail)
 .application-score-box {
   min-width: 104px;
   padding: 12px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f8fafc;
+  border: 1px solid var(--app-border-color);
+  border-radius: var(--app-radius-small);
+  background: #fafafa;
   text-align: right;
 }
 
@@ -790,8 +791,8 @@ onMounted(loadDetail)
 }
 
 .audit-action-card {
-  border-color: #dbeafe;
-  background: #f8fbff;
+  border-color: var(--app-border-color);
+  background: var(--app-card-bg);
 }
 
 .audit-action-summary {
@@ -804,9 +805,9 @@ onMounted(loadDetail)
 .audit-metric {
   min-width: 0;
   padding: 12px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
+  border: 1px solid var(--app-border-color);
+  border-radius: var(--app-radius-small);
+  background: #fafafa;
 }
 
 .audit-metric span {

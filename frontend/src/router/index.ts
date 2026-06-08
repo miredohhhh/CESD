@@ -154,7 +154,7 @@ const router = createRouter({
           name: 'admin-users',
           component: () => import('@/views/admin/UserManage.vue'),
           meta: {
-            title: 'User Management',
+            title: '用户管理',
             roles: ['ADMIN'],
             permissionCode: 'admin:user:view',
             showInMenu: true,
@@ -166,7 +166,7 @@ const router = createRouter({
           name: 'admin-system-configs',
           component: () => import('@/views/admin/SystemConfigManage.vue'),
           meta: {
-            title: 'System Config',
+            title: '系统配置管理',
             roles: ['ADMIN'],
             permissionCode: 'admin:system-config:view',
             showInMenu: true,
