@@ -196,24 +196,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="admin-page" data-testid="my-applications-page">
+  <section class="admin-page application-page" data-testid="my-applications-page">
     <AdminPageHeader
       eyebrow="学生申报"
       title="我的申报"
       description="查看和管理我的综合测评申报材料，跟踪草稿、待审核、已通过和已驳回状态。"
-    >
-      <template #actions>
-        <el-button
-          v-if="userStore.hasPermission('student:application:create')"
-          type="primary"
-          data-testid="student-create-application-button"
-          :disabled="!hasStudentBinding"
-          @click="goCreate"
-        >
-          新增申报
-        </el-button>
-      </template>
-    </AdminPageHeader>
+    />
 
     <el-alert
       v-if="!hasStudentBinding"
@@ -239,10 +227,18 @@ onMounted(() => {
       </el-card>
     </div>
 
-    <el-card class="admin-filter-card" shadow="never">
-      <el-form :model="filters" label-position="top">
-        <div class="admin-filter-grid">
-          <el-form-item label="状态">
+    <el-card class="admin-filter-card application-filter-card" shadow="never">
+      <el-form
+        :model="filters"
+        class="application-filter-form"
+        label-position="right"
+        label-width="56px"
+      >
+        <div class="application-filter-row">
+          <el-form-item
+            label="状态"
+            class="application-filter-item application-filter-item--status"
+          >
             <el-select v-model="filters.status" clearable placeholder="全部状态">
               <el-option
                 v-for="item in statusOptions"
@@ -253,7 +249,10 @@ onMounted(() => {
             </el-select>
           </el-form-item>
 
-          <el-form-item label="关键字" class="admin-filter-grid__wide">
+          <el-form-item
+            label="关键词"
+            class="application-filter-item application-filter-item--keyword"
+          >
             <el-input
               v-model="filters.keyword"
               clearable
@@ -262,33 +261,54 @@ onMounted(() => {
             />
           </el-form-item>
 
-          <el-form-item label=" ">
-            <div class="admin-filter-actions">
-              <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-form-item class="application-filter-actions-item">
+            <div class="application-filter-actions">
               <el-button @click="handleReset">重置</el-button>
+              <el-button type="primary" @click="handleSearch">查询</el-button>
             </div>
           </el-form-item>
         </div>
       </el-form>
     </el-card>
 
-    <el-card class="admin-table-card" shadow="never">
-      <div class="admin-card-header">
+    <el-card class="admin-table-card application-table-card" shadow="never">
+      <div class="admin-card-header application-table-header">
         <div>
           <div class="admin-card-header__title">申报列表</div>
           <div class="admin-card-header__meta">共 {{ total }} 条申报记录</div>
+        </div>
+        <div class="application-table-toolbar">
+          <el-button
+            v-if="userStore.hasPermission('student:application:create')"
+            type="primary"
+            data-testid="student-create-application-button"
+            :disabled="!hasStudentBinding"
+            @click="goCreate"
+          >
+            新增申报
+          </el-button>
+          <el-button
+            class="application-refresh-button"
+            :loading="loading"
+            :disabled="!hasStudentBinding"
+            title="刷新申报列表"
+            aria-label="刷新申报列表"
+            data-testid="my-applications-refresh-button"
+            @click="refreshPage"
+          >
+            <span class="application-refresh-icon">↻</span>
+          </el-button>
         </div>
       </div>
 
       <el-table
         v-loading="loading"
         :data="applications"
-        border
-        stripe
         empty-text="暂无申报记录，可点击右上角新增申报。"
+        class="application-table"
         data-testid="my-applications-table"
       >
-        <el-table-column prop="title" label="申报标题" min-width="190" show-overflow-tooltip />
+        <el-table-column prop="title" label="申报标题" min-width="260" show-overflow-tooltip />
         <el-table-column
           prop="categoryName"
           label="综测分类"
@@ -296,10 +316,20 @@ onMounted(() => {
           show-overflow-tooltip
         />
         <el-table-column prop="itemName" label="综测项目" min-width="160" show-overflow-tooltip />
-        <el-table-column label="申请分" width="90" align="right">
+        <el-table-column
+          label="申请分"
+          width="96"
+          align="right"
+          class-name="application-number-cell"
+        >
           <template #default="{ row }">{{ formatScore(row.applyScore) }}</template>
         </el-table-column>
-        <el-table-column label="认定分" width="90" align="right">
+        <el-table-column
+          label="认定分"
+          width="96"
+          align="right"
+          class-name="application-number-cell"
+        >
           <template #default="{ row }">{{ formatScore(row.finalScore) }}</template>
         </el-table-column>
         <el-table-column label="状态" width="110">
@@ -309,16 +339,22 @@ onMounted(() => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="attachmentCount" label="附件数" width="90" align="right" />
+        <el-table-column
+          prop="attachmentCount"
+          label="附件数"
+          width="96"
+          align="right"
+          class-name="application-number-cell"
+        />
         <el-table-column label="提交时间" min-width="170">
           <template #default="{ row }">{{ formatDateTime(row.submitTime) }}</template>
         </el-table-column>
         <el-table-column label="审核时间" min-width="170">
           <template #default="{ row }">{{ formatDateTime(row.reviewTime) }}</template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" width="190">
+        <el-table-column label="操作" fixed="right" width="176">
           <template #default="{ row }">
-            <div class="admin-table-actions">
+            <div class="admin-table-actions application-table-actions">
               <el-button
                 link
                 type="primary"
@@ -368,6 +404,33 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.application-page {
+  gap: 16px;
+}
+
+.application-page :deep(.admin-page-header) {
+  align-items: flex-start;
+  gap: 16px;
+  padding: 0 2px 2px;
+}
+
+.application-page :deep(.admin-page-header__eyebrow) {
+  margin-bottom: 4px;
+  color: var(--app-text-secondary-color);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.application-page :deep(.admin-page-header h1) {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.application-page :deep(.admin-page-header__description) {
+  margin-top: 6px;
+  color: var(--app-text-secondary-color);
+}
+
 .application-stat-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(120px, 1fr));
@@ -375,25 +438,42 @@ onMounted(() => {
 }
 
 .application-stat-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--app-border-light);
+  border-radius: var(--app-radius);
+  background: var(--app-surface-color);
+  box-shadow: var(--app-shadow-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.application-stat-card:hover {
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.035),
+    0 10px 26px rgba(15, 23, 42, 0.055);
+  transform: translateY(-1px);
 }
 
 .application-stat-card :deep(.el-card__body) {
-  padding: 16px;
+  padding: 14px 16px 12px;
 }
 
 .application-stat-card__label {
-  color: #64748b;
-  font-size: 13px;
+  color: var(--app-text-secondary-color);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .application-stat-card__value {
-  margin-top: 8px;
-  color: #111827;
-  font-size: 26px;
+  margin-top: 6px;
+  color: var(--app-text-color);
+  font-size: 24px;
   font-weight: 700;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .application-stat-card__value--success {
@@ -409,18 +489,158 @@ onMounted(() => {
 }
 
 .application-stat-card__value--primary {
-  color: #1d4ed8;
+  color: var(--app-primary-color);
+}
+
+.application-filter-card :deep(.el-card__body) {
+  padding: 12px 18px;
+}
+
+.application-filter-form :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.application-filter-form :deep(.el-form-item__label) {
+  height: 32px;
+  padding-right: 8px;
+  color: #344054;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+.application-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.application-filter-item {
+  flex: 0 1 auto;
+}
+
+.application-filter-item--status {
+  width: 210px;
+}
+
+.application-filter-item--keyword {
+  width: min(420px, 36vw);
+}
+
+.application-filter-item :deep(.el-select),
+.application-filter-item :deep(.el-input) {
+  width: 100%;
+}
+
+.application-filter-actions-item {
+  margin-left: auto;
+}
+
+.application-filter-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.application-table-card {
+  border-color: var(--app-border-light);
+  border-radius: var(--app-radius);
+  background: var(--app-surface-strong);
+  overflow: hidden;
+}
+
+.application-table-card :deep(.el-card__body) {
+  padding: 18px 20px;
+}
+
+.application-table-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.application-table-toolbar {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.application-refresh-button {
+  width: 32px;
+  padding: 0;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.application-refresh-icon {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.application-table :deep(.el-table__cell) {
+  padding: 10px 0;
+  border-right: 0;
+}
+
+.application-table :deep(th.el-table__cell) {
+  background: rgba(247, 249, 252, 0.92);
+  color: #334155;
+  font-weight: 650;
+}
+
+.application-table :deep(.el-table__row:hover > td.el-table__cell) {
+  background: rgba(22, 119, 255, 0.035);
+}
+
+.application-table :deep(.el-table__inner-wrapper::before) {
+  background: var(--app-border-light);
+}
+
+.application-table :deep(.el-table__fixed-right::before) {
+  box-shadow: -6px 0 14px rgba(15, 23, 42, 0.035);
+}
+
+.application-table :deep(.application-number-cell .cell) {
+  font-variant-numeric: tabular-nums;
+}
+
+.application-table-actions {
+  gap: 10px;
+  white-space: nowrap;
 }
 
 @media (max-width: 1180px) {
   .application-stat-grid {
     grid-template-columns: repeat(3, minmax(120px, 1fr));
   }
+
+  .application-filter-actions-item {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 760px) {
   .application-stat-grid {
     grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .application-filter-item--status,
+  .application-filter-item--keyword {
+    width: 100%;
+  }
+
+  .application-table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .application-table-toolbar {
+    justify-content: flex-end;
   }
 }
 </style>
