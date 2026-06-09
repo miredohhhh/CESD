@@ -406,44 +406,47 @@ onMounted(() => {
 <style scoped>
 .application-page {
   gap: 16px;
+  --application-card-border: rgba(15, 23, 42, 0.06);
+  --application-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.025), 0 8px 24px rgba(15, 23, 42, 0.035);
 }
 
 .application-page :deep(.admin-page-header) {
   align-items: flex-start;
-  gap: 16px;
-  padding: 0 2px 2px;
+  gap: 12px;
+  padding: 0 0 2px;
 }
 
 .application-page :deep(.admin-page-header__eyebrow) {
   margin-bottom: 4px;
-  color: var(--app-text-secondary-color);
+  color: var(--app-text-tertiary);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .application-page :deep(.admin-page-header h1) {
-  font-size: 24px;
+  font-size: 23px;
   line-height: 1.2;
 }
 
 .application-page :deep(.admin-page-header__description) {
   margin-top: 6px;
   color: var(--app-text-secondary-color);
+  line-height: 1.55;
 }
 
 .application-stat-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(120px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .application-stat-card {
-  border: 1px solid var(--app-border-light);
+  overflow: hidden;
+  border: 1px solid var(--application-card-border);
   border-radius: var(--app-radius);
-  background: var(--app-surface-color);
-  box-shadow: var(--app-shadow-card);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--app-card-bg);
+  box-shadow: var(--application-card-shadow);
   transition:
     box-shadow 0.18s ease,
     transform 0.18s ease;
@@ -451,26 +454,30 @@ onMounted(() => {
 
 .application-stat-card:hover {
   box-shadow:
-    0 2px 4px rgba(15, 23, 42, 0.035),
-    0 10px 26px rgba(15, 23, 42, 0.055);
+    0 2px 5px rgba(15, 23, 42, 0.035),
+    0 12px 28px rgba(15, 23, 42, 0.05);
   transform: translateY(-1px);
 }
 
 .application-stat-card :deep(.el-card__body) {
-  padding: 14px 16px 12px;
+  display: flex;
+  min-height: 78px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14px 18px;
 }
 
 .application-stat-card__label {
   color: var(--app-text-secondary-color);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1.4;
 }
 
 .application-stat-card__value {
   margin-top: 6px;
   color: var(--app-text-color);
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -493,7 +500,13 @@ onMounted(() => {
 }
 
 .application-filter-card :deep(.el-card__body) {
-  padding: 12px 18px;
+  padding: 15px 20px;
+}
+
+.application-filter-card {
+  border-color: var(--application-card-border);
+  background: var(--app-card-bg);
+  box-shadow: var(--application-card-shadow);
 }
 
 .application-filter-form :deep(.el-form-item) {
@@ -512,7 +525,7 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 16px;
+  gap: 12px 18px;
 }
 
 .application-filter-item {
@@ -520,11 +533,12 @@ onMounted(() => {
 }
 
 .application-filter-item--status {
-  width: 210px;
+  width: 206px;
 }
 
 .application-filter-item--keyword {
-  width: min(420px, 36vw);
+  width: min(520px, 42vw);
+  min-width: 280px;
 }
 
 .application-filter-item :deep(.el-select),
@@ -543,36 +557,47 @@ onMounted(() => {
 }
 
 .application-table-card {
-  border-color: var(--app-border-light);
+  border-color: var(--application-card-border);
   border-radius: var(--app-radius);
-  background: var(--app-surface-strong);
+  background: var(--app-card-bg);
+  box-shadow: var(--application-card-shadow);
   overflow: hidden;
 }
 
 .application-table-card :deep(.el-card__body) {
-  padding: 18px 20px;
+  padding: 18px 20px 16px;
 }
 
 .application-table-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--app-border-light);
 }
 
 .application-table-toolbar {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .application-refresh-button {
   width: 32px;
+  height: 32px;
   padding: 0;
   color: #475569;
-  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--app-border-color);
+  background: #fff;
+}
+
+.application-refresh-button:hover {
+  color: var(--app-primary-color);
+  border-color: rgba(22, 119, 255, 0.32);
+  background: #f8fbff;
 }
 
 .application-refresh-icon {
@@ -583,18 +608,26 @@ onMounted(() => {
 }
 
 .application-table :deep(.el-table__cell) {
-  padding: 10px 0;
+  padding: 12px 0;
   border-right: 0;
 }
 
 .application-table :deep(th.el-table__cell) {
-  background: rgba(247, 249, 252, 0.92);
-  color: #334155;
-  font-weight: 650;
+  background: #fafafa;
+  color: #344054;
+  font-weight: 600;
+}
+
+.application-table :deep(td.el-table__cell) {
+  color: #344054;
+}
+
+.application-table :deep(.el-table__header-wrapper .cell) {
+  line-height: 1.45;
 }
 
 .application-table :deep(.el-table__row:hover > td.el-table__cell) {
-  background: rgba(22, 119, 255, 0.035);
+  background: rgba(22, 119, 255, 0.028);
 }
 
 .application-table :deep(.el-table__inner-wrapper::before) {
@@ -602,7 +635,7 @@ onMounted(() => {
 }
 
 .application-table :deep(.el-table__fixed-right::before) {
-  box-shadow: -6px 0 14px rgba(15, 23, 42, 0.035);
+  box-shadow: -6px 0 12px rgba(15, 23, 42, 0.03);
 }
 
 .application-table :deep(.application-number-cell .cell) {
@@ -610,8 +643,19 @@ onMounted(() => {
 }
 
 .application-table-actions {
-  gap: 10px;
+  gap: 8px;
   white-space: nowrap;
+}
+
+.application-table-actions :deep(.el-button.is-link) {
+  padding: 0;
+  font-weight: 500;
+}
+
+.application-table-card .admin-pagination {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--app-border-light);
 }
 
 @media (max-width: 1180px) {

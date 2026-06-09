@@ -77,7 +77,11 @@
           </el-card>
         </div>
 
-        <el-card class="admin-table-card" shadow="never" data-testid="my-score-student-info">
+        <el-card
+          class="admin-table-card my-score-info-card"
+          shadow="never"
+          data-testid="my-score-student-info"
+        >
           <template #header>
             <div class="admin-card-header">
               <div>
@@ -90,29 +94,37 @@
             </div>
           </template>
 
-          <el-descriptions :column="2" border class="my-score-descriptions">
-            <el-descriptions-item label="姓名">
-              {{ score.studentName || '-' }}
-            </el-descriptions-item>
-            <el-descriptions-item label="学号">
-              {{ score.studentNo || '-' }}
-            </el-descriptions-item>
-            <el-descriptions-item label="专业">
-              {{ score.majorName || '-' }}
-            </el-descriptions-item>
-            <el-descriptions-item label="班级">
-              {{ score.className || '-' }}
-            </el-descriptions-item>
-            <el-descriptions-item label="成绩状态">
-              <el-tag :type="scoreStatusTagType">{{ scoreStatusLabel }}</el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="计算时间">
-              {{ formatTime(score.calculateTime) }}
-            </el-descriptions-item>
-          </el-descriptions>
+          <div class="my-score-info-grid">
+            <div class="my-score-info-item">
+              <div class="my-score-info-item__label">姓名</div>
+              <div class="my-score-info-item__value">{{ score.studentName || '-' }}</div>
+            </div>
+            <div class="my-score-info-item">
+              <div class="my-score-info-item__label">学号</div>
+              <div class="my-score-info-item__value">{{ score.studentNo || '-' }}</div>
+            </div>
+            <div class="my-score-info-item">
+              <div class="my-score-info-item__label">专业</div>
+              <div class="my-score-info-item__value">{{ score.majorName || '-' }}</div>
+            </div>
+            <div class="my-score-info-item">
+              <div class="my-score-info-item__label">班级</div>
+              <div class="my-score-info-item__value">{{ score.className || '-' }}</div>
+            </div>
+            <div class="my-score-info-item">
+              <div class="my-score-info-item__label">成绩状态</div>
+              <div class="my-score-info-item__value">
+                <el-tag :type="scoreStatusTagType">{{ scoreStatusLabel }}</el-tag>
+              </div>
+            </div>
+            <div class="my-score-info-item">
+              <div class="my-score-info-item__label">计算时间</div>
+              <div class="my-score-info-item__value">{{ formatTime(score.calculateTime) }}</div>
+            </div>
+          </div>
         </el-card>
 
-        <el-card class="admin-table-card" shadow="never">
+        <el-card class="admin-table-card my-score-table-card" shadow="never">
           <template #header>
             <div class="admin-card-header">
               <div>
@@ -127,8 +139,7 @@
 
           <el-table
             :data="categoryScores"
-            border
-            stripe
+            class="my-score-category-table"
             data-testid="my-score-category-table"
             :empty-text="categoryEmptyText"
           >
@@ -267,7 +278,34 @@ onMounted(() => loadData(false))
 
 <style scoped>
 .my-score-page {
-  gap: 18px;
+  gap: 16px;
+  --my-score-card-border: rgba(15, 23, 42, 0.06);
+  --my-score-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.025), 0 8px 24px rgba(15, 23, 42, 0.035);
+}
+
+.my-score-page :deep(.admin-page-header) {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0 0 2px;
+}
+
+.my-score-page :deep(.admin-page-header__eyebrow) {
+  margin-bottom: 4px;
+  color: var(--app-text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.my-score-page :deep(.admin-page-header h1) {
+  font-size: 23px;
+  line-height: 1.2;
+}
+
+.my-score-page :deep(.admin-page-header__description) {
+  margin-top: 6px;
+  color: var(--app-text-secondary-color);
+  line-height: 1.55;
 }
 
 .my-score-alert {
@@ -277,40 +315,82 @@ onMounted(() => loadData(false))
 .score-overview-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .score-overview-card {
-  border: 1px solid #d8e0ea;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--my-score-card-border);
+  border-radius: var(--app-radius);
+  background: var(--app-card-bg);
+  box-shadow: var(--my-score-card-shadow);
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.score-overview-card:hover {
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.035),
+    0 12px 28px rgba(15, 23, 42, 0.05);
+  transform: translateY(-1px);
+}
+
+.score-overview-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: var(--score-accent, var(--app-primary-color));
+  content: '';
+  opacity: 0.72;
+}
+
+.score-overview-card :deep(.el-card__body) {
+  min-height: 132px;
+  padding: 20px 22px 18px;
 }
 
 .score-overview-card--total {
-  background: linear-gradient(135deg, #f5f9ff 0%, #edf5ff 100%);
-  border-color: #bfd7ff;
+  --score-accent: var(--app-primary-color);
 }
 
 .score-overview-card--class {
-  background: linear-gradient(135deg, #f3fbf7 0%, #edf8f1 100%);
-  border-color: #bfdec9;
+  --score-accent: #16a34a;
 }
 
 .score-overview-card--major {
-  background: linear-gradient(135deg, #fff9ed 0%, #fff4dc 100%);
-  border-color: #ead09a;
+  --score-accent: #d97706;
 }
 
 .score-overview-card__label {
-  color: #5f6b7a;
-  font-size: 14px;
+  color: var(--app-text-secondary-color);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .score-overview-card__value {
   margin-top: 10px;
-  color: #1f2a37;
-  font-size: 34px;
+  color: var(--app-text-color);
+  font-size: 36px;
   font-weight: 700;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
+}
+
+.score-overview-card--total .score-overview-card__value {
+  color: var(--app-primary-color);
+}
+
+.score-overview-card--class .score-overview-card__value {
+  color: #15803d;
+}
+
+.score-overview-card--major .score-overview-card__value {
+  color: #b45309;
 }
 
 .score-overview-card__value--rank {
@@ -319,15 +399,97 @@ onMounted(() => loadData(false))
 
 .score-overview-card__meta {
   margin-top: 8px;
-  color: #7b8794;
+  color: var(--app-text-tertiary);
   font-size: 13px;
+  line-height: 1.45;
 }
 
-.my-score-descriptions {
-  width: 100%;
+.my-score-info-card,
+.my-score-table-card,
+.score-empty-card {
+  border-color: var(--my-score-card-border);
+  border-radius: var(--app-radius);
+  background: var(--app-card-bg);
+  box-shadow: var(--my-score-card-shadow);
+  overflow: hidden;
+}
+
+.my-score-info-card :deep(.el-card__header),
+.my-score-table-card :deep(.el-card__header) {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--app-border-light);
+}
+
+.my-score-info-card :deep(.el-card__body),
+.my-score-table-card :deep(.el-card__body) {
+  padding: 18px 20px;
+}
+
+.my-score-info-card :deep(.admin-card-header),
+.my-score-table-card :deep(.admin-card-header) {
+  margin-bottom: 0;
+}
+
+.my-score-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.my-score-info-item {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--app-border-light);
+  border-radius: var(--app-radius-small);
+  background: #fafafa;
+}
+
+.my-score-info-item__label {
+  color: var(--app-text-secondary-color);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.my-score-info-item__value {
+  margin-top: 6px;
+  color: var(--app-text-color);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.my-score-category-table {
+  border-radius: var(--app-radius-small);
+  background: var(--app-surface-solid);
+}
+
+.my-score-category-table :deep(.el-table__cell) {
+  padding: 12px 0;
+  border-right: 0;
+}
+
+.my-score-category-table :deep(th.el-table__cell) {
+  background: #fafafa;
+  color: #344054;
+  font-weight: 600;
+}
+
+.my-score-category-table :deep(td.el-table__cell) {
+  color: #344054;
+}
+
+.my-score-category-table :deep(.el-table__row:hover > td.el-table__cell) {
+  background: rgba(22, 119, 255, 0.028);
+}
+
+.my-score-category-table :deep(.el-table__inner-wrapper::before) {
+  background: var(--app-border-light);
 }
 
 .score-table-number {
+  color: var(--app-primary-color);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -336,14 +498,31 @@ onMounted(() => loadData(false))
   min-height: 280px;
 }
 
+.score-empty-card :deep(.el-card__body) {
+  display: flex;
+  min-height: 280px;
+  align-items: center;
+  justify-content: center;
+}
+
 .score-empty-card__text {
   margin-bottom: 14px;
-  color: #697586;
+  color: var(--app-text-secondary-color);
   font-size: 14px;
 }
 
 @media (max-width: 900px) {
   .score-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-score-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .my-score-info-grid {
     grid-template-columns: 1fr;
   }
 }
