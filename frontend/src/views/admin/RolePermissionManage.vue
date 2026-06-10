@@ -1,5 +1,8 @@
 <template>
-  <section class="admin-page" data-testid="role-permission-page">
+  <section
+    class="admin-page admin-list-page role-permission-page"
+    data-testid="role-permission-page"
+  >
     <AdminPageHeader
       eyebrow="角色授权"
       title="角色授权"
@@ -18,8 +21,8 @@
       </template>
     </AdminPageHeader>
 
-    <div class="admin-split-layout">
-      <el-card class="admin-filter-card" shadow="never">
+    <div class="admin-split-layout role-permission-layout">
+      <el-card class="admin-filter-card role-permission-card role-selector-card" shadow="never">
         <div class="admin-card-header">
           <div>
             <div class="admin-card-header__title">选择角色</div>
@@ -30,6 +33,7 @@
           <el-form-item label="角色">
             <el-select
               v-model="selectedRoleId"
+              class="role-select"
               filterable
               placeholder="请选择角色"
               @change="handleRoleChange"
@@ -48,7 +52,10 @@
         </p>
       </el-card>
 
-      <el-card class="admin-tree-card" shadow="never">
+      <el-card
+        class="admin-tree-card role-permission-card role-permission-tree-card"
+        shadow="never"
+      >
         <div class="admin-card-header">
           <div>
             <div class="admin-card-header__title">权限树</div>
@@ -58,8 +65,17 @@
         <p class="admin-tree-card__intro">
           修改授权后请点击右上角“保存授权”。未选择角色时可浏览权限结构，但不会提交保存。
         </p>
+        <el-alert
+          v-if="!selectedRoleId"
+          class="role-permission-empty"
+          type="info"
+          title="请先选择左侧角色，再进行权限勾选和保存。"
+          show-icon
+          :closable="false"
+        />
         <el-tree
           ref="treeRef"
+          class="role-permission-tree"
           v-loading="loading"
           :data="permissionTree"
           data-testid="role-permission-tree"
@@ -70,12 +86,18 @@
           empty-text="暂无权限数据"
         >
           <template #default="{ data }">
-            <span class="admin-tree-node">
-              <span>{{ data.permissionName }}</span>
-              <el-tag size="small" :type="data.permissionType === 'MENU' ? 'primary' : 'info'">
+            <span class="admin-tree-node role-permission-node">
+              <span class="role-permission-node__name">{{ data.permissionName }}</span>
+              <el-tag
+                class="role-permission-node__tag"
+                size="small"
+                :type="getPermissionTagType(data.permissionType)"
+              >
                 {{ data.permissionType }}
               </el-tag>
-              <code class="admin-code-text">{{ data.permissionCode }}</code>
+              <code class="admin-code-text role-permission-node__code">
+                {{ data.permissionCode }}
+              </code>
             </span>
           </template>
         </el-tree>
@@ -101,6 +123,13 @@ const selectedRoleId = ref<number>()
 const loading = ref(false)
 const saving = ref(false)
 const treeRef = ref<TreeInstance>()
+
+function getPermissionTagType(type: SysPermissionVO['permissionType']) {
+  if (type === 'MENU') return 'primary'
+  if (type === 'BUTTON') return 'warning'
+  return 'success'
+}
+
 onMounted(async () => {
   await Promise.all([loadRoles(), loadPermissionTree()])
 })
@@ -135,3 +164,88 @@ async function handleSave() {
   }
 }
 </script>
+
+<style scoped>
+.role-permission-layout {
+  grid-template-columns: minmax(280px, 30%) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.role-permission-card :deep(.el-card__body) {
+  padding: 18px 20px 20px;
+}
+
+.role-select {
+  width: 100%;
+}
+
+.role-permission-empty {
+  margin-bottom: 14px;
+  border-radius: var(--app-radius-small);
+}
+
+.role-permission-tree {
+  max-height: min(64vh, 680px);
+  overflow: auto;
+  padding: 4px 2px 8px;
+}
+
+.role-permission-tree :deep(.el-tree) {
+  background: transparent;
+}
+
+.role-permission-tree :deep(.el-tree-node__content) {
+  min-height: 38px;
+  border-radius: var(--app-radius-small);
+  transition: background-color 0.16s ease;
+}
+
+.role-permission-tree :deep(.el-tree-node__content:hover) {
+  background-color: #f5f8fc;
+}
+
+.role-permission-node {
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+
+.role-permission-node__name {
+  min-width: 96px;
+  color: var(--app-text-color);
+  font-weight: 500;
+}
+
+.role-permission-node__tag {
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.role-permission-node__code {
+  min-width: 0;
+  max-width: min(460px, 48vw);
+  overflow: hidden;
+  color: var(--app-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .role-permission-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .role-permission-tree {
+    max-height: none;
+  }
+
+  .role-permission-node {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .role-permission-node__code {
+    max-width: 100%;
+  }
+}
+</style>

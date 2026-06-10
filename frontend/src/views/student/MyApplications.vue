@@ -627,7 +627,7 @@ onMounted(() => {
 }
 
 .application-table :deep(.el-table__row:hover > td.el-table__cell) {
-  background: rgba(22, 119, 255, 0.028);
+  background: #f5f8fc;
 }
 
 .application-table :deep(.el-table__inner-wrapper::before) {

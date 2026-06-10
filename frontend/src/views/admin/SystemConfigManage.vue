@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="system-config-manage-page">
+  <section class="admin-page admin-list-page" data-testid="system-config-manage-page">
     <AdminPageHeader
       eyebrow="系统维护"
       title="系统配置管理"
@@ -55,8 +55,6 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无系统配置"
         data-testid="system-config-table"
       >
@@ -84,7 +82,7 @@
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" min-width="170" />
         <el-table-column prop="updateTime" label="更新时间" min-width="170" />
-        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -127,6 +125,7 @@
       v-model="dialogVisible"
       :title="editingId ? '编辑系统配置' : '新增系统配置'"
       width="680px"
+      class="admin-list-dialog"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <div class="admin-dialog-grid">

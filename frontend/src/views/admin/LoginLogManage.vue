@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="login-log-page">
+  <section class="admin-page admin-list-page" data-testid="login-log-page">
     <AdminPageHeader
       eyebrow="账号安全"
       title="登录日志管理"
@@ -67,13 +67,11 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无登录日志"
         data-testid="login-log-table"
       >
-        <el-table-column prop="username" label="用户名" min-width="130" />
-        <el-table-column prop="realName" label="真实姓名" min-width="130" />
+        <el-table-column prop="username" label="用户名" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="realName" label="真实姓名" min-width="140" show-overflow-tooltip />
         <el-table-column prop="roleCode" label="角色" width="110" />
         <el-table-column label="类型" width="120">
           <template #default="{ row }">
@@ -95,7 +93,7 @@
           show-overflow-tooltip
         />
         <el-table-column prop="loginTime" label="登录时间" min-width="170" />
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="110" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -123,7 +121,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="detailVisible" title="登录日志详情" width="820px">
+    <el-dialog v-model="detailVisible" title="登录日志详情" width="820px" class="admin-list-dialog">
       <div v-if="detail" class="log-detail">
         <section class="log-detail-section">
           <div class="log-detail-section__title">基础信息</div>

@@ -139,6 +139,11 @@ a {
   box-shadow: var(--app-shadow-card);
 }
 
+.admin-filter-card {
+  --admin-filter-control-height: 32px;
+  --admin-filter-label-height: 22px;
+}
+
 .admin-filter-card .el-card__body,
 .admin-table-card .el-card__body {
   padding: 18px;
@@ -148,15 +153,25 @@ a {
   display: grid;
   grid-template-columns: repeat(4, minmax(180px, 1fr));
   gap: 12px 16px;
-  align-items: start;
+  align-items: end;
 }
 
 .admin-filter-grid .el-form-item {
   margin-bottom: 0;
 }
 
+.admin-filter-grid > .el-form-item:has(.admin-filter-actions) {
+  align-self: end;
+}
+
+.admin-filter-grid > .el-form-item:has(.admin-filter-actions) > .el-form-item__label {
+  display: none;
+}
+
 .admin-filter-grid .el-input,
-.admin-filter-grid .el-select {
+.admin-filter-grid .el-select,
+.admin-filter-grid .el-input-number,
+.admin-filter-grid .el-date-editor {
   width: 100%;
 }
 
@@ -169,6 +184,12 @@ a {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  min-height: var(--admin-filter-control-height);
+  white-space: nowrap;
+}
+
+.admin-filter-actions .el-button {
+  height: var(--admin-filter-control-height);
 }
 
 .admin-card-header {
@@ -198,13 +219,334 @@ a {
 
 .admin-table-card .el-table {
   --el-table-border-color: var(--app-border-light);
-  --el-table-header-bg-color: rgba(247, 249, 252, 0.92);
+  --el-table-bg-color: #ffffff;
+  --el-table-tr-bg-color: #ffffff;
+  --el-table-expanded-cell-bg-color: #ffffff;
+  --el-table-header-bg-color: #fafafa;
   --el-table-header-text-color: #334155;
-  --el-table-row-hover-bg-color: rgba(22, 119, 255, 0.035);
+  --el-table-row-hover-bg-color: #f5f8fc;
+  --el-table-current-row-bg-color: #f5f8fc;
+  --el-table-row-striped-bg-color: #fbfcfe;
 
   overflow: hidden;
   border-radius: var(--app-radius-small);
   background: var(--app-surface-solid);
+}
+
+.admin-table-card .el-table th.el-table-fixed-column--right,
+.admin-table-card .el-table th.el-table__cell.is-fixed-right,
+.admin-table-card .el-table .el-table__fixed-right-patch {
+  z-index: 3;
+  background-color: var(--el-table-header-bg-color);
+}
+
+.admin-table-card .el-table td.el-table-fixed-column--right,
+.admin-table-card .el-table td.el-table__cell.is-fixed-right {
+  z-index: 2;
+  background-color: var(--el-table-tr-bg-color);
+}
+
+.admin-table-card .el-table .el-table__body tr:hover > td.el-table-fixed-column--right,
+.admin-table-card .el-table .el-table__body tr:hover > td.el-table__cell.is-fixed-right,
+.admin-table-card .el-table .el-table__body tr.hover-row > td.el-table-fixed-column--right,
+.admin-table-card .el-table .el-table__body tr.hover-row > td.el-table__cell.is-fixed-right {
+  background-color: var(--el-table-row-hover-bg-color);
+}
+
+.admin-table-card .el-table .el-table__body tr.current-row > td.el-table-fixed-column--right,
+.admin-table-card .el-table .el-table__body tr.current-row > td.el-table__cell.is-fixed-right {
+  background-color: var(--el-table-current-row-bg-color);
+}
+
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped
+  > td.el-table-fixed-column--right,
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped
+  > td.el-table__cell.is-fixed-right {
+  background-color: var(--el-table-row-striped-bg-color);
+}
+
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped:hover
+  > td.el-table-fixed-column--right,
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped:hover
+  > td.el-table__cell.is-fixed-right,
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped.hover-row
+  > td.el-table-fixed-column--right,
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped.hover-row
+  > td.el-table__cell.is-fixed-right,
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped.current-row
+  > td.el-table-fixed-column--right,
+.admin-table-card
+  .el-table
+  .el-table__body
+  tr.el-table__row--striped.current-row
+  > td.el-table__cell.is-fixed-right {
+  background-color: var(--el-table-row-hover-bg-color);
+}
+
+.admin-list-page {
+  gap: 16px;
+
+  --admin-list-border: rgba(5, 5, 5, 0.06);
+  --admin-list-border-soft: rgba(5, 5, 5, 0.04);
+  --admin-list-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 8px 24px rgba(15, 23, 42, 0.04);
+  --admin-list-header-bg: #fafafa;
+  --admin-list-hover-bg: #f5f8fc;
+}
+
+.admin-list-page .admin-page-header {
+  align-items: flex-end;
+  padding: 0 2px 2px;
+}
+
+.admin-list-page .admin-page-header__eyebrow {
+  margin-bottom: 5px;
+  color: #8c8c8c;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.admin-list-page .admin-page-header h1 {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.22;
+}
+
+.admin-list-page .admin-page-header__description {
+  margin-top: 7px;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.admin-list-page .admin-filter-card,
+.admin-list-page .admin-table-card,
+.admin-list-page .admin-tree-card {
+  overflow: hidden;
+  border-color: var(--admin-list-border);
+  border-radius: var(--app-radius);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--admin-list-shadow);
+}
+
+.admin-list-page .admin-filter-card .el-card__body {
+  padding: 18px 20px 12px;
+}
+
+.admin-list-page .admin-table-card .el-card__body,
+.admin-list-page .admin-tree-card .el-card__body {
+  padding: 18px 20px;
+}
+
+.admin-list-page .admin-filter-grid {
+  gap: 14px 16px;
+}
+
+.admin-list-page .admin-filter-grid .el-form-item__label {
+  min-height: var(--admin-filter-label-height);
+  margin-bottom: 6px;
+  color: #475467;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: var(--admin-filter-label-height);
+}
+
+.admin-list-page .admin-filter-actions {
+  align-items: center;
+  padding-top: 0;
+}
+
+.admin-list-page .admin-filter-actions .el-button {
+  min-width: 68px;
+}
+
+.admin-list-page .admin-card-header {
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.admin-list-page .admin-card-header__title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.admin-list-page .admin-card-header__meta {
+  margin-top: 2px;
+  color: #8c8c8c;
+  line-height: 1.5;
+}
+
+.admin-list-page .admin-table-card .el-table {
+  --el-table-border-color: var(--admin-list-border-soft);
+  --el-table-bg-color: #ffffff;
+  --el-table-tr-bg-color: #ffffff;
+  --el-table-expanded-cell-bg-color: #ffffff;
+  --el-table-header-bg-color: var(--admin-list-header-bg);
+  --el-table-header-text-color: #475467;
+  --el-table-row-hover-bg-color: var(--admin-list-hover-bg);
+  --el-table-current-row-bg-color: var(--admin-list-hover-bg);
+  --el-table-row-striped-bg-color: #fbfcfe;
+
+  border: 1px solid var(--admin-list-border-soft);
+  border-radius: var(--app-radius-small);
+}
+
+.admin-list-page .admin-table-card .el-table::before,
+.admin-list-page .admin-table-card .el-table::after {
+  background-color: transparent;
+}
+
+.admin-list-page .admin-table-card .el-table th.el-table__cell {
+  background: var(--admin-list-header-bg);
+  color: #475467;
+  font-weight: 600;
+}
+
+.admin-list-page .admin-table-card .el-table .el-table__cell {
+  padding: 11px 0;
+  border-right: 0;
+  border-bottom-color: var(--admin-list-border-soft);
+}
+
+.admin-list-page .admin-table-card .el-table .cell {
+  line-height: 1.45;
+}
+
+.admin-list-page .admin-table-card .el-table__fixed-right::before,
+.admin-list-page .admin-table-card .el-table__fixed::before {
+  background-color: transparent;
+}
+
+.admin-list-page .admin-table-card .el-table__fixed-right {
+  box-shadow: -8px 0 14px rgba(15, 23, 42, 0.04);
+}
+
+.admin-list-page .admin-table-actions {
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.admin-list-page .admin-table-actions .el-button.is-link {
+  height: auto;
+  min-height: auto;
+  padding: 0 2px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.admin-list-page .admin-pagination {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--admin-list-border-soft);
+}
+
+.admin-list-page .admin-code-text {
+  color: #475467;
+  background: transparent;
+}
+
+.admin-list-page .admin-value-preview {
+  color: #344054;
+}
+
+.admin-list-page .el-tag {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.admin-list-dialog.el-dialog,
+.admin-list-dialog .el-dialog {
+  --admin-list-border-soft: rgba(5, 5, 5, 0.04);
+
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.admin-list-dialog .el-dialog__header {
+  margin-right: 0;
+  padding: 18px 20px 10px;
+}
+
+.admin-list-dialog .el-dialog__title {
+  color: var(--app-text-color);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.admin-list-dialog .el-dialog__body {
+  padding: 12px 20px 4px;
+}
+
+.admin-list-dialog .el-dialog__footer {
+  padding: 12px 20px 18px;
+  border-top: 1px solid var(--admin-list-border-soft);
+}
+
+.admin-list-page .admin-dialog-grid,
+.admin-list-dialog .admin-dialog-grid {
+  gap: 2px 16px;
+}
+
+.admin-list-page .student-form-section,
+.admin-list-dialog .student-form-section {
+  padding: 14px 14px 0;
+  border: 1px solid var(--admin-list-border-soft);
+  border-radius: var(--app-radius-small);
+  background: #fafafa;
+}
+
+.admin-list-page .student-form-section + .student-form-section,
+.admin-list-dialog .student-form-section + .student-form-section {
+  margin-top: 12px;
+}
+
+.admin-list-page .log-detail,
+.admin-list-dialog .log-detail {
+  gap: 12px;
+}
+
+.admin-list-page .log-detail-section,
+.admin-list-dialog .log-detail-section {
+  overflow: hidden;
+  border-color: var(--admin-list-border-soft);
+  background: #ffffff;
+}
+
+.admin-list-page .log-detail-section__title,
+.admin-list-dialog .log-detail-section__title {
+  background: #fafafa;
+}
+
+.admin-list-page .log-detail-item,
+.admin-list-dialog .log-detail-item {
+  border-color: var(--admin-list-border-soft);
+}
+
+.admin-list-page .copyable-text,
+.admin-list-dialog .copyable-text {
+  border-color: var(--admin-list-border-soft);
+  background: #fafafa;
 }
 
 .admin-table-actions {
@@ -385,12 +727,17 @@ a {
 
 .admin-filter-card .el-input__wrapper,
 .admin-filter-card .el-select__wrapper {
+  min-height: var(--admin-filter-control-height);
   border-radius: var(--app-radius-small);
   background: rgba(248, 250, 252, 0.8);
   box-shadow: 0 0 0 1px var(--app-border-light) inset;
   transition:
     background 0.18s ease,
     box-shadow 0.18s ease;
+}
+
+.admin-filter-card .admin-filter-grid .el-date-editor {
+  height: var(--admin-filter-control-height);
 }
 
 .admin-filter-card .el-input__wrapper:hover,

@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="major-manage-page">
+  <section class="admin-page admin-list-page" data-testid="major-manage-page">
     <AdminPageHeader
       eyebrow="组织基础数据"
       title="专业管理"
@@ -55,18 +55,21 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无专业数据"
         data-testid="major-table"
       >
-        <el-table-column prop="majorName" label="专业名称" min-width="170" />
+        <el-table-column prop="majorName" label="专业名称" min-width="180" show-overflow-tooltip />
         <el-table-column label="专业编码" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="admin-code-text">{{ row.majorCode || '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="collegeName" label="所属学院" min-width="180" />
+        <el-table-column
+          prop="collegeName"
+          label="所属学院"
+          min-width="190"
+          show-overflow-tooltip
+        />
         <el-table-column prop="description" label="说明" min-width="220" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
@@ -76,7 +79,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" min-width="170" />
-        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -115,7 +118,12 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑专业' : '新增专业'" width="680px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑专业' : '新增专业'"
+      width="680px"
+      class="admin-list-dialog"
+    >
       <el-form
         ref="formRef"
         :model="form"

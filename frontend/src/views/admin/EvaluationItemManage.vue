@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="evaluation-item-manage-page">
+  <section class="admin-page admin-list-page" data-testid="evaluation-item-manage-page">
     <AdminPageHeader
       eyebrow="基础数据"
       title="综测项目管理"
@@ -65,18 +65,16 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无综测项目"
         data-testid="evaluation-item-table"
       >
-        <el-table-column prop="itemName" label="项目名称" min-width="170" />
+        <el-table-column prop="itemName" label="项目名称" min-width="190" show-overflow-tooltip />
         <el-table-column label="项目编码" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="admin-code-text">{{ row.itemCode || '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="所属分类" min-width="160">
+        <el-table-column label="所属分类" min-width="170" show-overflow-tooltip>
           <template #default="{ row }">{{ getCategoryName(row.categoryId) }}</template>
         </el-table-column>
         <el-table-column label="计分方式" width="110">
@@ -101,7 +99,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -140,7 +138,12 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑项目' : '新增项目'" width="760px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑项目' : '新增项目'"
+      width="760px"
+      class="admin-list-dialog"
+    >
       <el-form
         ref="formRef"
         :model="form"

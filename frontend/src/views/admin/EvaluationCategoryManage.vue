@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="evaluation-category-manage-page">
+  <section class="admin-page admin-list-page" data-testid="evaluation-category-manage-page">
     <AdminPageHeader
       eyebrow="基础数据"
       title="综测分类管理"
@@ -55,12 +55,15 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无综测分类"
         data-testid="evaluation-category-table"
       >
-        <el-table-column prop="categoryName" label="分类名称" min-width="170" />
+        <el-table-column
+          prop="categoryName"
+          label="分类名称"
+          min-width="180"
+          show-overflow-tooltip
+        />
         <el-table-column label="分类编码" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="admin-code-text">{{ row.categoryCode || '-' }}</span>
@@ -77,7 +80,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" min-width="170" />
-        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -116,7 +119,12 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑分类' : '新增分类'" width="680px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑分类' : '新增分类'"
+      width="680px"
+      class="admin-list-dialog"
+    >
       <el-form
         ref="formRef"
         :model="form"

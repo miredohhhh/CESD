@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="user-manage-page">
+  <section class="admin-page admin-list-page" data-testid="user-manage-page">
     <AdminPageHeader
       eyebrow="账号管理"
       title="用户管理"
@@ -65,17 +65,15 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无用户数据"
         data-testid="user-table"
       >
-        <el-table-column prop="username" label="用户名" min-width="140" />
-        <el-table-column prop="realName" label="真实姓名" min-width="140" />
-        <el-table-column label="角色" min-width="170">
+        <el-table-column prop="username" label="用户名" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="realName" label="真实姓名" min-width="150" show-overflow-tooltip />
+        <el-table-column label="角色" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">{{ getRoleLabel(row.roleId) }}</template>
         </el-table-column>
-        <el-table-column prop="phone" label="手机号" min-width="130" />
+        <el-table-column prop="phone" label="手机号" min-width="140" show-overflow-tooltip />
         <el-table-column prop="email" label="邮箱" min-width="190" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
@@ -139,7 +137,12 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑用户' : '新增用户'" width="720px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑用户' : '新增用户'"
+      width="720px"
+      class="admin-list-dialog"
+    >
       <el-form
         ref="formRef"
         :model="form"
@@ -203,7 +206,12 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="resetDialogVisible" title="重置用户密码" width="480px">
+    <el-dialog
+      v-model="resetDialogVisible"
+      title="重置用户密码"
+      width="480px"
+      class="admin-list-dialog"
+    >
       <p class="admin-text-muted">管理员重置后，用户需要使用新密码重新登录。</p>
       <el-form ref="resetFormRef" :model="resetForm" :rules="resetRules" label-position="top">
         <el-form-item label="新密码" prop="newPassword">

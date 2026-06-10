@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="permission-manage-page">
+  <section class="admin-page admin-list-page" data-testid="permission-manage-page">
     <AdminPageHeader
       eyebrow="权限模型"
       title="权限管理"
@@ -62,12 +62,15 @@
       <el-table
         v-loading="loading"
         :data="permissions"
-        border
-        stripe
         empty-text="暂无权限定义"
         data-testid="permission-table"
       >
-        <el-table-column prop="permissionName" label="权限名称" min-width="160" />
+        <el-table-column
+          prop="permissionName"
+          label="权限名称"
+          min-width="170"
+          show-overflow-tooltip
+        />
         <el-table-column label="权限编码" min-width="250" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="admin-code-text">{{ row.permissionCode }}</span>
@@ -91,7 +94,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -130,7 +133,12 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑权限' : '新增权限'" width="760px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑权限' : '新增权限'"
+      width="760px"
+      class="admin-list-dialog"
+    >
       <el-form
         ref="formRef"
         :model="form"
