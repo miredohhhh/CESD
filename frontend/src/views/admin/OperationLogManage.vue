@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="operation-log-page">
+  <section class="admin-page admin-list-page" data-testid="operation-log-page">
     <AdminPageHeader
       eyebrow="系统审计"
       title="操作日志管理"
@@ -83,16 +83,19 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无操作日志"
         data-testid="operation-log-table"
       >
-        <el-table-column prop="username" label="用户名" min-width="130" />
-        <el-table-column prop="realName" label="真实姓名" min-width="130" />
+        <el-table-column prop="username" label="用户名" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="realName" label="真实姓名" min-width="140" show-overflow-tooltip />
         <el-table-column prop="roleCode" label="角色" width="110" />
-        <el-table-column prop="operationModule" label="模块" min-width="130" />
-        <el-table-column prop="operationType" label="类型" min-width="130" />
+        <el-table-column
+          prop="operationModule"
+          label="模块"
+          min-width="140"
+          show-overflow-tooltip
+        />
+        <el-table-column prop="operationType" label="类型" min-width="140" show-overflow-tooltip />
         <el-table-column
           prop="operationDesc"
           label="操作说明"
@@ -114,7 +117,7 @@
         </el-table-column>
         <el-table-column prop="ipAddress" label="IP 地址" min-width="130" />
         <el-table-column prop="operationTime" label="操作时间" min-width="170" />
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="110" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -142,7 +145,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="detailVisible" title="操作日志详情" width="880px">
+    <el-dialog v-model="detailVisible" title="操作日志详情" width="880px" class="admin-list-dialog">
       <div v-if="detail" class="log-detail">
         <section class="log-detail-section">
           <div class="log-detail-section__title">基础信息</div>

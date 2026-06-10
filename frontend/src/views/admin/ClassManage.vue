@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="class-manage-page">
+  <section class="admin-page admin-list-page" data-testid="class-manage-page">
     <AdminPageHeader
       eyebrow="组织基础数据"
       title="班级管理"
@@ -65,22 +65,25 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无班级数据"
         data-testid="class-table"
       >
-        <el-table-column prop="className" label="班级名称" min-width="170" />
+        <el-table-column prop="className" label="班级名称" min-width="180" show-overflow-tooltip />
         <el-table-column label="班级编码" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="admin-code-text">{{ row.classCode || '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="所属专业" min-width="180">
+        <el-table-column label="所属专业" min-width="190" show-overflow-tooltip>
           <template #default="{ row }">{{ getMajorName(row.majorId) }}</template>
         </el-table-column>
         <el-table-column prop="grade" label="年级" width="120" />
-        <el-table-column prop="counselorName" label="辅导员" min-width="130" />
+        <el-table-column
+          prop="counselorName"
+          label="辅导员"
+          min-width="140"
+          show-overflow-tooltip
+        />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
@@ -89,7 +92,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" min-width="170" />
-        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -128,7 +131,12 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑班级' : '新增班级'" width="700px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑班级' : '新增班级'"
+      width="700px"
+      class="admin-list-dialog"
+    >
       <el-form
         ref="formRef"
         :model="form"

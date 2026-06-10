@@ -1,39 +1,45 @@
 <template>
-  <section class="admin-page" data-testid="score-recalculate-page">
+  <section
+    class="admin-page admin-list-page score-recalculate-page"
+    data-testid="score-recalculate-page"
+  >
     <AdminPageHeader
       eyebrow="成绩管理"
       title="成绩重算"
       description="按学生、班级、专业或全量范围重新计算综合测评成绩和排名。"
     >
       <template #actions>
-        <el-button
-          v-if="canExportScore"
-          :loading="exporting"
-          data-testid="score-export-summary-button"
-          @click="handleExportScoreSummaries"
-        >
-          导出成绩汇总
-        </el-button>
-        <el-button
-          v-if="canExportScore"
-          :loading="exporting"
-          data-testid="score-export-class-ranking-button"
-          @click="handleExportClassRanking"
-        >
-          导出班级排名
-        </el-button>
-        <el-button
-          v-if="canExportScore"
-          :loading="exporting"
-          data-testid="score-export-major-ranking-button"
-          @click="handleExportMajorRanking"
-        >
-          导出专业排名
-        </el-button>
+        <div class="score-header-actions">
+          <el-button
+            v-if="canExportScore"
+            :loading="exporting"
+            data-testid="score-export-summary-button"
+            @click="handleExportScoreSummaries"
+          >
+            导出成绩汇总
+          </el-button>
+          <el-button
+            v-if="canExportScore"
+            :loading="exporting"
+            data-testid="score-export-class-ranking-button"
+            @click="handleExportClassRanking"
+          >
+            导出班级排名
+          </el-button>
+          <el-button
+            v-if="canExportScore"
+            :loading="exporting"
+            data-testid="score-export-major-ranking-button"
+            @click="handleExportMajorRanking"
+          >
+            导出专业排名
+          </el-button>
+        </div>
       </template>
     </AdminPageHeader>
 
     <el-alert
+      class="score-risk-alert"
       title="当前为管理端成绩重算入口，操作会更新成绩统计和排名。"
       description="建议在基础数据、材料审核结果确认后执行；单个学生、班级、专业重算适合日常修正，全量重算适合阶段性统一刷新。"
       type="warning"
@@ -41,7 +47,7 @@
       :closable="false"
     />
 
-    <el-card class="admin-table-card" shadow="never">
+    <el-card class="admin-table-card score-workbench-card" shadow="never">
       <div class="admin-card-header">
         <div>
           <div class="admin-card-header__title">重算范围</div>
@@ -71,6 +77,7 @@
                 />
               </el-select>
               <el-button
+                class="score-action-button"
                 type="primary"
                 data-testid="score-recalculate-student-button"
                 :loading="running"
@@ -104,6 +111,7 @@
                 />
               </el-select>
               <el-button
+                class="score-action-button"
                 type="primary"
                 data-testid="score-recalculate-class-button"
                 :loading="running"
@@ -137,6 +145,7 @@
                 />
               </el-select>
               <el-button
+                class="score-action-button"
                 type="primary"
                 data-testid="score-recalculate-major-button"
                 :loading="running"
@@ -156,7 +165,8 @@
               <p>全量重算会重新计算所有学生成绩和排名，数据量较大时可能需要更长时间。</p>
             </div>
             <el-button
-              type="danger"
+              class="score-action-button"
+              type="primary"
               data-testid="score-recalculate-all-button"
               :loading="running"
               :disabled="!canRecalculate"
@@ -169,7 +179,7 @@
       </el-tabs>
     </el-card>
 
-    <el-card class="admin-table-card" shadow="never">
+    <el-card class="admin-table-card score-result-card" shadow="never">
       <div class="admin-card-header">
         <div>
           <div class="admin-card-header__title">最近操作结果</div>
@@ -178,15 +188,14 @@
       </div>
 
       <el-table
+        class="score-result-table"
         :data="operationLogs"
-        border
-        stripe
         empty-text="暂无重算操作记录"
         data-testid="score-recalculate-result-table"
       >
-        <el-table-column prop="type" label="操作类型" width="150" />
-        <el-table-column prop="target" label="操作对象" min-width="240" />
-        <el-table-column prop="time" label="操作时间" width="180" />
+        <el-table-column prop="type" label="操作类型" width="150" show-overflow-tooltip />
+        <el-table-column prop="target" label="操作对象" min-width="240" show-overflow-tooltip />
+        <el-table-column prop="time" label="操作时间" width="180" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag type="success">{{ row.status }}</el-tag>
@@ -362,38 +371,88 @@ onMounted(fetchOptions)
 </script>
 
 <style scoped>
+.score-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.score-risk-alert {
+  --el-alert-bg-color: #fff8eb;
+  --el-alert-border-color: #ffe4b8;
+  --el-alert-padding: 14px 16px;
+  border: 1px solid #ffe4b8;
+  border-radius: var(--app-radius-small);
+}
+
+.score-risk-alert :deep(.el-alert__title) {
+  color: #ad6800;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.score-risk-alert :deep(.el-alert__description) {
+  color: #8c5a12;
+  line-height: 1.7;
+}
+
+.score-workbench-card :deep(.el-card__body),
+.score-result-card :deep(.el-card__body) {
+  padding: 18px 20px 20px;
+}
+
 .score-tabs {
   --el-tabs-header-height: 44px;
+}
+
+.score-tabs :deep(.el-tabs__header) {
+  margin: 2px 0 16px;
+}
+
+.score-tabs :deep(.el-tabs__nav-wrap::after) {
+  height: 1px;
+  background-color: var(--app-border-color);
+}
+
+.score-tabs :deep(.el-tabs__item) {
+  color: var(--app-text-secondary);
+  font-weight: 500;
+}
+
+.score-tabs :deep(.el-tabs__item.is-active) {
+  color: var(--app-primary-color);
+  font-weight: 600;
 }
 
 .score-action-panel {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  min-height: 132px;
-  padding: 18px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f8fafc;
+  gap: 18px;
+  min-height: 118px;
+  padding: 18px 20px;
+  border: 1px solid var(--app-border-color);
+  border-radius: var(--app-radius-small);
+  background: #fbfcfe;
 }
 
 .score-action-panel--danger {
-  border-color: #fecaca;
-  background: #fff7f7;
+  border-color: #ffe4b8;
+  background: #fffaf0;
 }
 
 .score-action-panel h3 {
   margin: 0;
-  color: #111827;
+  color: var(--app-text-color);
   font-size: 16px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .score-action-panel p {
   max-width: 520px;
   margin: 8px 0 0;
-  color: #64748b;
+  color: var(--app-text-secondary);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -409,7 +468,19 @@ onMounted(fetchOptions)
   width: 320px;
 }
 
+.score-action-button {
+  min-width: 132px;
+}
+
+.score-result-table :deep(.el-tag) {
+  border-radius: 999px;
+}
+
 @media (max-width: 900px) {
+  .score-header-actions {
+    justify-content: flex-start;
+  }
+
   .score-action-panel,
   .score-action-control {
     align-items: stretch;

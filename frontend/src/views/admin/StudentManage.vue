@@ -1,5 +1,5 @@
 <template>
-  <section class="admin-page" data-testid="student-manage-page">
+  <section class="admin-page admin-list-page" data-testid="student-manage-page">
     <AdminPageHeader
       eyebrow="学生档案"
       title="学生管理"
@@ -78,8 +78,6 @@
       <el-table
         v-loading="loading"
         :data="records"
-        border
-        stripe
         empty-text="暂无学生数据"
         data-testid="student-table"
       >
@@ -88,15 +86,15 @@
         <el-table-column label="绑定用户" min-width="170" show-overflow-tooltip>
           <template #default="{ row }">{{ getUserName(row.userId) }}</template>
         </el-table-column>
-        <el-table-column label="专业" min-width="160">
+        <el-table-column label="专业" min-width="170" show-overflow-tooltip>
           <template #default="{ row }">{{ getMajorName(row.majorId) }}</template>
         </el-table-column>
-        <el-table-column label="班级" min-width="160">
+        <el-table-column label="班级" min-width="170" show-overflow-tooltip>
           <template #default="{ row }">{{ getClassName(row.classId) }}</template>
         </el-table-column>
         <el-table-column prop="grade" label="年级" width="110" />
         <el-table-column prop="gender" label="性别" width="80" />
-        <el-table-column prop="phone" label="手机号" min-width="130" />
+        <el-table-column prop="phone" label="手机号" min-width="140" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
@@ -104,7 +102,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="canUpdate || canDelete" label="操作" width="150" fixed="right">
+        <el-table-column v-if="canUpdate || canDelete" label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="admin-table-actions">
               <el-button
@@ -143,7 +141,12 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑学生' : '新增学生'" width="820px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑学生' : '新增学生'"
+      width="820px"
+      class="admin-list-dialog"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <section class="student-form-section">
           <h3>账号绑定</h3>
